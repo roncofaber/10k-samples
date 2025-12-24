@@ -23,36 +23,64 @@ fs = 10
 
 class NirvanaUVVis:
     
-    def __init__(self, sample_name, position_key, wavelengths, absorbances,
-                 intensities, spectras, x_center, y_center, x_positions, y_positions,
-                 dark_sample=None, blank_sample=None, erange=None):
+    def __init__(self, sample_name=None, position_key=None, wavelengths=None,
+                 raw_intensities=None, x_center=None, y_center=None,
+                 x_positions=None, y_positions=None, dark_sample=None,
+                 blank_sample=None, erange=None, measurement_settings=dict()):
         
         # assign internal variables according to input
         
-        # dataset ID
+        # set dataset ID
         self.poskey      = position_key
         self.sample_name = sample_name
         
-        # measurement data
-        self._wavelengths = wavelengths
-        self._absorbances = absorbances
-        self._intensities = intensities
-        self._spectras    = spectras
+        # set measurement data
+        self._wavelengths     = wavelengths
+        self._raw_intensities = raw_intensities
+        
+        # assign reference data (if provided)
+        self.set_references(dark_sample=dark_sample, blank_sample=blank_sample)
+        
+        # calculate corrected intensities (only for not dark)
+        if not self._is_dark:
+            self._initialize_sample()
         
         # set sample position
         self.x_center = x_center
         self.y_center = y_center
         self.x_positions = x_positions
         self.y_positions = y_positions
-        
-        # reference data
-        self.set_references(dark_sample=dark_sample, blank_sample=blank_sample)
-        
+                
         # assign energy range (if provided)
         if erange is None:
             self.set_erange((-np.inf, np.inf))
         else:
             self.set_erange(erange=erange)
+            
+        # assign measurement settings (if provided)
+        self.measurement_settings = measurement_settings
+        
+        return
+    
+    def _initialize_sample(self):
+        
+        # get dark and blank
+        dark_sample  = self._dark_sample
+        
+        if self._is_blank:
+            blank_sample = self
+        else:
+            blank_sample = self._blank_sample
+        
+        # get corrected intensities (remove dark)
+        self._cor_intensities = abs(np.clip(
+            self._raw_intensities - dark_sample._raw_intensities))
+        
+        # calculate transmissions
+        self._transmissions = self._cor_intensities/blank_sample._cor_intensities
+        
+        # calculcate absorbances
+        self._absorbances = -np.log10(self._transmissions)
         
         return
     
@@ -67,17 +95,35 @@ class NirvanaUVVis:
         return self._absorbances[:,self._emask]
     
     @property
-    def intensities(self):
-        return self._intensities
+    def transmissions(self):
+        return self._transmissions[:,self._emask]
     
     @property
-    def spectras(self):
-        return self._spectras[:,self._emask]
+    def raw_intensities(self):
+        return self._raw_intensities[:,self._emask]
+    
+    @property
+    def cor_intensities(self):
+        return self._cor_intensities[:,self._emask]
     
     @property
     def nspots(self):
         return len(self.absorbances)
-
+    
+    @property
+    def _is_dark(self):
+        if self._dark_sample is None and self._blank_sample is None:
+            return True
+        else:
+            return False
+      
+    @property
+    def _is_blank(self):
+        if self._dark_sample is not None and self._blank_sample is None:
+            return True
+        else:
+            return False
+    
     def __repr__(self): #make it pretty
         return f"{self.__class__.__name__}({self.sample_name})"
     
@@ -132,9 +178,12 @@ class NirvanaUVVis:
         
         fig, ax = plt.subplots(figsize=(9.5*cm, 6*cm))
         
-        for absorbance in self.absorbances[spots]:
+        for spot in spots:
             
-            ax.plot(self.wavelengths, absorbance)
+            absorbance = self.absorbances[spot]
+            label = self.y_positions[spot]
+            
+            ax.plot(self.wavelengths, absorbance, label=label)
         
         ax.set_title(self.poskey)
         
@@ -144,6 +193,10 @@ class NirvanaUVVis:
         ax.xaxis.set_tick_params(labelsize=fs-1)
         
         ax.set_xlim(left=self._erange[0], right=self._erange[1])
+        
+        # set legend
+        ax.legend(fontsize=fs-1, framealpha=1, edgecolor='k', loc="upper right",
+                  ncols=1, title=None, title_fontsize=14)
         
         fig.tight_layout()
         fig.show()

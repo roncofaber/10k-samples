@@ -24,16 +24,20 @@ import numpy as np
 
 filename = "251210_173817_pollux_oospec_multipos_line_scan.h5"
 
-nirvana10ks = h5_to_samples(filename, erange=[380, 600])
+nirvana10ks = h5_to_samples(filename, erange=[320, 650])
 
 #%%
 
+# example on how to get inhomogenity
+sample = nirvana10ks[0] # get sample
+
+# choose spots
 spots = [0,1,2,3]
 
-ino = nirvana10ks[0].get_inhomogenity(spots=spots)
+# get ino
+ino = sample.get_inhomogenity(spots=spots)
 
-#%%
-
+#%% plot across all samples
 
 mean_values = [sample.get_inhomogenity(spots=spots).mean() for sample in nirvana10ks]
 std_values  = [sample.get_inhomogenity(spots=spots).std() for sample in nirvana10ks]
