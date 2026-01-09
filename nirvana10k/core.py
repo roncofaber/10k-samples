@@ -11,13 +11,24 @@ import numpy as np
 
 # internal modules
 from nirvana10k.read.h5tosample import h5_to_samples
-from nirvana10k.utils.plotting import plot_inhomogenity
+from nirvana10k.utils.plotting import plot_inhomogeneity
+
+# os and other
+import os
+import glob
 
 #%%
 
 class NirvanaSamples:
     
-    def __init__(self, h5files, erange=None):
+    def __init__(self, h5files=None, erange=None, path=None):
+        
+        # use a path to a folder to look up all h5 files
+        if path is not None:
+            abspath = os.path.abspath(path)
+            
+            h5files = glob.glob(f"{abspath}/*.h5")
+            h5files.sort()
         
         # make sure it's a list
         if isinstance(h5files, str):
@@ -36,19 +47,25 @@ class NirvanaSamples:
     def samples(self):
         return self._samples
     
-    # get inhomogenity of samples
-    def get_inhomogenity(self, value="cor_intensities", spots=None):
+    def set_erange(self, erange=None, left=None, right=None):
+        for sample in self:
+            sample.set_erange(erange=erange, left=left, right=right)
+        return
+    
+    # get inhomogenity of all samples
+    def get_inhomogeneities(self, value="cor_intensities", spots=None):
         
         # iterate over samples and get inhomogenity
-        inhomogenity = np.array([sample.get_inhomogenity(spots=spots, value=value) for sample in self])
+        inhomogenity = np.array([sample.get_inhomogeneity(spots=spots, value=value) for sample in self])
         
         return inhomogenity
     
-    def plot_inhomogenity(self, value="cor_intensities", spots=None):
+    # plot inhomogeneities
+    def plot_inhomogeneities(self, value="cor_intensities", spots=None):
         
-        inhomogenity = self.get_inhomogenity(value=value, spots=spots)
+        inhomogeneity = self.get_inhomogeneities(value=value, spots=spots)
         
-        plot_inhomogenity(inhomogenity)
+        plot_inhomogeneity(inhomogeneity)
         return
     
     # make class iterable

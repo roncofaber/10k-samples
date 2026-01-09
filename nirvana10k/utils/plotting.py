@@ -47,6 +47,9 @@ def plot_sample(value2plot, wavelengths, spots, title, erange, value):
     
     ax.set_xlim(left=erange[0], right=erange[1])
     
+    if value == "transmissions":
+        ax.set_ylim(bottom=0, top=1)
+    
     # set legend outside axes, right side, compact
     ax.legend(fontsize=fs-1, framealpha=1, edgecolor='k', 
               loc="upper left", bbox_to_anchor=(1.01, 1),
@@ -59,7 +62,7 @@ def plot_sample(value2plot, wavelengths, spots, title, erange, value):
     
     return
 
-def plot_inhomogenity(inhomogenity):
+def plot_inhomogeneity(inhomogenity):
     
     mean_values = inhomogenity.mean(axis=1)
     std_values  = inhomogenity.std(axis=1)

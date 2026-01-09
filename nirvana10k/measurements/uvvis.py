@@ -147,7 +147,7 @@ class NirvanaUVVis:
         return
     
     # get inhomogenity within sample
-    def get_inhomogenity(self, value="cor_intensities", spots=None):
+    def get_inhomogeneity(self, value="cor_intensities", spots=None):
         
         if self.nspots < 2:
             raise ValueError("At least two spots are required to calculate inhomogeneity.")

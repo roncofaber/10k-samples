@@ -15,7 +15,7 @@ import h5py
 #%%
 
 def get_sample_data(h5group, poskey):
-    
+    # add .attrs to get new metadata
     sample_name   = h5group[poskey]['sample_name'][()].decode('utf-8')
     
     raw_intensities    = h5group[poskey]['spectral_data'][()]
