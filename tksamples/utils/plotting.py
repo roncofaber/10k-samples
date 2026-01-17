@@ -97,3 +97,15 @@ def plot_inhomogeneity(inhomogenity):
     
     
     return
+
+def visualize_carrier(image, fname):
+
+    fig, ax = plt.subplots(figsize=(18 * cm, 12 * cm))
+
+    ax.imshow(image)
+    ax.set_title(f'{fname}', fontsize=fs)
+    ax.axis('off')  # Remove axes for cleaner look
+    fig.tight_layout()
+    fig.show()
+
+    return

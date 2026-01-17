@@ -12,71 +12,68 @@ import scipy
 from scipy.integrate import simpson
 
 # internal modules
-from nirvana10k.utils.plotting import plot_sample
+import tksamples
+from tksamples.utils.plotting import plot_sample
 
 #%%
 
 class NirvanaUVVis:
     
-    def __init__(self, sample_name=None, position_key=None, wavelengths=None,
-                 raw_intensities=None, x_center=None, y_center=None,
-                 x_positions=None, y_positions=None, dark_sample=None,
-                 blank_sample=None, erange=None, measurement_settings=dict()):
+    def __init__(self, sample_attrs=None, tray_well=None, wavelengths=None,
+                 raw_intensities=None, blank_intensities=None, dark_intensities=None,
+                 erange=None, measurement_settings=dict(), carrier_attrs=dict()):
         
         # assign internal variables according to input
         
         # set dataset ID
-        self.poskey      = position_key
-        self.sample_name = sample_name
+        self.tray_well    = tray_well
+        self.sample_name  = sample_attrs["sample_name"]
+        self.sample_uuid  = sample_attrs["sample_uuid"]
+        self.sample_attrs = sample_attrs
         
         # set measurement data
         self._wavelengths     = wavelengths
         self._raw_intensities = raw_intensities
+        self._blank_intensities = blank_intensities
+        self._dark_intensities  = dark_intensities
         
-        # assign reference data (if provided)
-        self.set_references(dark_sample=dark_sample, blank_sample=blank_sample)
+        # calculate corrected intensities, transmissions, absorbances
+        self._initialize_sample()
         
-        # calculate corrected intensities (only for not dark)
-        if not self._is_dark:
-            self._initialize_sample()
-        
-        # set sample position
-        self.x_center = x_center
-        self.y_center = y_center
-        self.x_positions = x_positions
-        self.y_positions = y_positions
-                
+        # set sample position on carrier
+        self._set_sample_position()
+
         # assign energy range (if provided)
-        if erange is None:
-            self.set_erange((-np.inf, np.inf))
-        else:
-            self.set_erange(erange=erange)
+        self.set_erange(erange=erange)
             
         # assign measurement settings (if provided)
         self.measurement_settings = measurement_settings
+        self.carrier_attrs = carrier_attrs
         
         return
     
     def _initialize_sample(self):
         
-        # get dark and blank
-        dark_sample  = self._dark
-        
-        if self._is_blank:
-            blank_sample = self
-        else:
-            blank_sample = self._blank
-        
         # get corrected intensities (remove dark)
         self._cor_intensities = abs(np.clip(
-            self._raw_intensities - dark_sample._raw_intensities))
+            self._raw_intensities - self._dark_intensities))
         
         # calculate transmissions
-        self._transmissions = self._cor_intensities/blank_sample._cor_intensities
+        cor_blank_intensities = abs(np.clip(
+            self._blank_intensities - self._dark_intensities))
+        
+        self._transmissions = self._cor_intensities/cor_blank_intensities.mean(axis=0)
         
         # calculcate absorbances
         self._absorbances = -np.log10(self._transmissions)
         
+        return
+    
+    def _set_sample_position(self):
+        self.xy_center    = np.array([self.sample_attrs["x_center"],
+                                      self.sample_attrs["y_center"]])
+        self.xy_positions = np.array([self.sample_attrs["x_positions"],
+                                      self.sample_attrs["y_positions"]]).T
         return
     
     # define bunch of properties so that they are already masked with the correct
@@ -105,20 +102,6 @@ class NirvanaUVVis:
     def nspots(self):
         return len(self.absorbances)
     
-    @property
-    def _is_dark(self):
-        if self._dark is None and self._blank is None:
-            return True
-        else:
-            return False
-      
-    @property
-    def _is_blank(self):
-        if self._dark is not None and self._blank is None:
-            return True
-        else:
-            return False
-    
     def __repr__(self): #make it pretty
         return f"{self.__class__.__name__}({self.sample_name})"
     
@@ -130,16 +113,12 @@ class NirvanaUVVis:
             self._erange[0] = left
         if right is not None:
             self._erange[1] = right
+        if erange is None and left is None and right is None:
+            self._erange = (np.min(self._wavelengths), np.max(self._wavelengths))
             
         self._setup_emask()
         return
-    
-    # set references (blank, dark)
-    def set_references(self, dark_sample=None, blank_sample=None):
-        self._dark  = dark_sample
-        self._blank = blank_sample
-        return
-    
+
     # set proper mask according to erange
     def _setup_emask(self):
         eleft, eright = self._erange
@@ -162,7 +141,10 @@ class NirvanaUVVis:
         for cc, ii in enumerate(spots):
             for jj in spots[cc+1:]:
                 
-                abs_diff  = np.abs(value2calc[jj] - value2calc[ii])
+                spectra1 = value2calc[jj]/simpson(value2calc[jj], self.wavelengths)
+                spectra2 = value2calc[ii]/simpson(value2calc[ii], self.wavelengths)
+                
+                abs_diff  = np.abs(spectra1 - spectra2)
                 area_diff = simpson(abs_diff, self.wavelengths)
                 abs_diffs.append(area_diff)
         
@@ -176,8 +158,10 @@ class NirvanaUVVis:
         if spots is None:
             spots = list(range(self.nspots))
         
+        title = f"{self.sample_name} @ {self.tray_well}"
+        
         # plot sample
-        plot_sample(value2plot, self.wavelengths, spots, self.poskey, self._erange, value)
+        plot_sample(value2plot, self.wavelengths, spots, title, self._erange, value)
         
         return
     

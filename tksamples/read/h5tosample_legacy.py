@@ -6,8 +6,11 @@ Created on Mon Dec 22 15:24:53 2025
 @author: roncofaber
 """
 
+# pn
+import numpy as np
+
 # internal modules
-from nirvana10k.measurements.uvvis import NirvanaUVVis
+from tksamples.measurements.uvvis import NirvanaUVVis
 
 # echfive
 import h5py
@@ -15,38 +18,42 @@ import h5py
 #%%
 
 def get_sample_data(h5group, poskey):
-    # add .attrs to get new metadata
-    sample_name   = h5group[poskey]['sample_name'][()].decode('utf-8')
     
-    raw_intensities    = h5group[poskey]['spectral_data'][()]
+    pos = h5group[poskey]
     
-    x_center = h5group[poskey]['x_center'][()]
-    y_center = h5group[poskey]['y_center'][()]
+    # get sample attributes
+    sample_attrs = dict(pos.attrs)
     
-    x_positions = None #h5group[poskey]['x_positions'][()] #TODO add x_positions
-    y_positions = h5group[poskey]['y_positions'][()]
-    # for now returns None
+    # get raw intensities
+    try:
+        raw_intensities = pos['raw_intensities'][()]
+    except:
+        raw_intensities = pos['spectral_data'][()]
     
-    return sample_name, raw_intensities,  x_center, y_center, x_positions, y_positions
+    # get position information
+    x_center = pos['x_center'][()]
+    y_center = pos['y_center'][()]
+    
+    x_positions = pos['x_positions'][()] #TODO add x_positions
+    y_positions = pos['y_positions'][()]
+    
+    return sample_attrs, raw_intensities, np.array([x_center, y_center]),\
+        np.array([x_positions, y_positions]).T
         
 def get_measurement_settings(h5file):
     
-    measurement_settings = dict()
-    
-    measurement_settings["spectra_int_time"] =\
-        float(h5file['measurement/pollux_oospec_multipos_line_scan/spec_integration_time'][()])
-    measurement_settings["spectra_averaged"] =\
-        int(h5file['measurement/pollux_oospec_multipos_line_scan/spectra_averaged'][()])
-    measurement_settings["y_scan_length"] =\
-        float(h5file['measurement/pollux_oospec_multipos_line_scan/y_scan_length'][()])
+    settings_group = h5file['measurement/pollux_oospec_multipos_line_scan/settings']
+    measurement_settings = dict(settings_group.attrs)
         
     return measurement_settings
 
 def h5_to_samples(h5filename, erange=None):
     
-    samples_list = []
     
     with h5py.File(h5filename, 'r') as h5file:
+        
+        # get carrier information
+        carrier_attrs = dict(h5file.attrs)
         
         # get wavelengths (same for all measurments)
         wavelengths = h5file['measurement/pollux_oospec_multipos_line_scan/wavelengths'][()]
@@ -56,28 +63,24 @@ def h5_to_samples(h5filename, erange=None):
         
         # isolate relevant H5 group and get list of positions
         h5group   = h5file['measurement/pollux_oospec_multipos_line_scan/positions']
-        positions = h5group.keys()
         
         # start with no blank and dark
-        
         dark_sample  = None
         blank_sample = None
-        # read each position and return Nirvana10kSample class
-        for poskey in positions:
+        
+        # read each position and return NirvanaUVVis object
+        samples_list = []
+        for poskey in h5group:
             
-            # read here
-            sample_name, raw_intensities, x_center, y_center, x_positions,\
-            y_positions = get_sample_data(h5group, poskey)
+            sample_attrs, raw_intensities, xy_center, xy_positions = get_sample_data(h5group, poskey)
                 
             # make it an object
-            uvvis_sample = NirvanaUVVis(sample_name=sample_name,
+            uvvis_sample = NirvanaUVVis(sample_attrs=sample_attrs,
                                         position_key=poskey,
                                         wavelengths=wavelengths,
                                         raw_intensities=raw_intensities,
-                                        x_center=x_center,
-                                        y_center=y_center,
-                                        x_positions=x_positions,
-                                        y_positions=y_positions,
+                                        xy_center = xy_center,
+                                        xy_positions = xy_positions,
                                         dark_sample=dark_sample,
                                         blank_sample=blank_sample,
                                         erange=erange,
@@ -85,11 +88,11 @@ def h5_to_samples(h5filename, erange=None):
                                         )
             
             # TODO we assume dark and blank always come first --> would fail otherwise!
-            if "dark_ref" in sample_name:
+            if "dark_ref" in sample_attrs["sample_name"]:
                 dark_sample  = uvvis_sample
-            elif "blank_ref" in sample_name:
+            elif "blank_ref" in sample_attrs["sample_name"]:
                 blank_sample = uvvis_sample
             else: # true samples go here
                 samples_list.append(uvvis_sample)
                 
-    return samples_list
+    return carrier_attrs, samples_list

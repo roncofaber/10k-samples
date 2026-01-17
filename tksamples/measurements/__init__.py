@@ -1,5 +1,5 @@
 """
-Measurements module for nirvana10k
+Measurements module for tksamples
 
 Contains classes for analyzing UV-Vis spectroscopy measurements.
 """

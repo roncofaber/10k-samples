@@ -7,7 +7,7 @@ Created on Mon Dec 22 15:23:50 2025
 """
 
 # load relevant modules
-from nirvana10k.read.h5tosample import h5_to_samples
+from tksamples.read.h5tosample import h5_to_samples
 
 # plotting functions
 import matplotlib.pyplot as plt
@@ -24,12 +24,12 @@ import numpy as np
 
 filename = "251210_173817_pollux_oospec_multipos_line_scan.h5"
 
-nirvana10ks = h5_to_samples(filename, erange=[320, 650])
+samples = h5_to_samples(filename, erange=[320, 650])
 
 #%%
 
 # example on how to get inhomogenity
-sample = nirvana10ks[0] # get sample
+sample = samples[0] # get sample
 
 # choose spots
 spots = [0,1,2,3]
@@ -39,12 +39,12 @@ ino = sample.get_inhomogenity(spots=spots)
 
 #%% plot across all samples
 
-mean_values = [sample.get_inhomogenity(spots=spots).mean() for sample in nirvana10ks]
-std_values  = [sample.get_inhomogenity(spots=spots).std() for sample in nirvana10ks]
+mean_values = [sample.get_inhomogenity(spots=spots).mean() for sample in samples]
+std_values  = [sample.get_inhomogenity(spots=spots).std() for sample in samples]
 
 fig, ax = plt.subplots(figsize=(9.5 * cm, 6 * cm))
 
-x_indices = np.arange(len(nirvana10ks))
+x_indices = np.arange(len(samples))
 
 # Create an errorbar plot
 ax.errorbar(x_indices, mean_values, yerr=std_values, fmt='o', color='black', 
@@ -61,7 +61,7 @@ ax.axhline(y=np.mean(mean_values), linestyle="--", color="gray", zorder=-10)
           # ncols=1, title=None, title_fontsize=14)
 
 # ax.set_ylim(bottom=0)  # Adjust according to your data range
-ax.set_xlim(left=-0.5, right=len(nirvana10ks)-0.5)
+ax.set_xlim(left=-0.5, right=len(samples)-0.5)
 
 ax.set_xticks(x_indices)  # Fires at each sample index
 

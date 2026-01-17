@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nirvana10k"
-description = "Analysis of UV-Vis spectroscopy data from Nirvana tool measurements"
+name = "tksamples"
+description = "Analysis of UV-Vis spectroscopy data from 10k sample measurements"
 readme = "README.md"
 authors = [
     {name = "roncofaber", email = "fabrice.roncoroni@gmail.com"}
 ]
 license = {text = "MIT"}
-keywords = ["spectroscopy", "uv-vis", "hdf5", "analysis", "nirvana"]
+keywords = ["spectroscopy", "uv-vis", "hdf5", "analysis", "nirvana", "samples"]
 dynamic = ["version"]
 
 classifiers = [
@@ -36,16 +36,16 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/roncofaber/nirvana10k"
-Repository = "https://github.com/roncofaber/nirvana10k"
-Documentation = "https://github.com/roncofaber/nirvana10k#readme"
-"Bug Tracker" = "https://github.com/roncofaber/nirvana10k/issues"
+Homepage = "https://github.com/roncofaber/10k-samples"
+Repository = "https://github.com/roncofaber/10k-samples"
+Documentation = "https://github.com/roncofaber/10k-samples#readme"
+"Bug Tracker" = "https://github.com/roncofaber/10k-samples/issues"
 
 [tool.setuptools]
-packages = ["nirvana10k", "nirvana10k.read", "nirvana10k.measurements"]
+packages = ["tksamples", "tksamples.read", "tksamples.measurements"]
 
 [tool.setuptools.package-data]
-"nirvana10k.examples" = ["*.h5"]
+"tksamples.examples" = ["*.h5"]
 
 [tool.setuptools.dynamic]
-version = {attr = "nirvana10k.__version__"}
+version = {attr = "tksamples.__version__"}

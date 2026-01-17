@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan  7 17:53:17 2026
+Created on Fri Jan 16 14:27:15 2026
 
 @author: roncofaber
 """
@@ -10,14 +10,12 @@ Created on Wed Jan  7 17:53:17 2026
 import numpy as np
 
 # internal modules
-from nirvana10k.read.h5tosample import h5_to_samples
-from nirvana10k.utils.plotting import plot_inhomogeneity
+from tksamples.read.h5tosample import h5_to_samples
+from tksamples.utils.plotting import plot_inhomogeneity
 
 # os and other
 import os
 import glob
-
-#%%
 
 class NirvanaSamples:
     
