@@ -18,25 +18,17 @@ import h5py
 
 #%%
 
-def get_sample_data(h5group, poskey):
-    
-    pos = h5group[poskey]
-    
-    # get sample attributes
-    sample_attrs = dict(pos.attrs)
-    
-    # get raw intensities
-    raw_intensities = pos['raw_intensities'][()]
-
-    # get blank intensities
-    blank_intensities = pos['blank_intensities'][()]
-    
-    # get dark intensities
-    dark_intensities = pos['dark_intensities'][()]
-    
-    return sample_attrs, raw_intensities, blank_intensities, dark_intensities
-
 def h5_to_samples(h5filename, erange=None):
+    try:
+        samples = h5_to_samples_new(h5filename, erange=erange)
+    except:
+        try:
+            samples = h5_to_samples_old(h5filename, erange=erange)
+        except:
+            raise ValueError
+    return samples
+
+def h5_to_samples_new(h5filename, erange=None):
     
     
     with h5py.File(h5filename, 'r') as h5file:
@@ -57,7 +49,17 @@ def h5_to_samples(h5filename, erange=None):
         samples_list = []
         for poskey in h5group:
             
-            sample_attrs, raw_intensities, blank_intensities, dark_intensities = get_sample_data(h5group, poskey)
+            # get sample attributes
+            sample_attrs = dict(h5group[poskey].attrs)
+            
+            # get raw intensities
+            raw_intensities = h5group[poskey]['raw_intensities'][()]
+
+            # get blank intensities
+            blank_intensities = h5group[poskey]['blank_intensities'][()]
+            
+            # get dark intensities
+            dark_intensities = h5group[poskey]['dark_intensities'][()]
             
             tray_well = number_to_well(int(poskey.split("_")[1]))
             
@@ -75,4 +77,64 @@ def h5_to_samples(h5filename, erange=None):
             
             samples_list.append(uvvis_sample)
                 
+    return samples_list
+
+def h5_to_samples_old(h5filename, erange=None):
+    with h5py.File(h5filename, 'r') as h5file:
+        
+        # get carrier information
+        carrier_attrs = dict(h5file.attrs)
+        
+        # get wavelengths (same for all measurments)
+        wavelengths = h5file['measurement/pollux_oospec_multipos_line_scan/wavelengths'][()]
+        
+        # get measurements settings
+        measurement_settings = dict(h5file['measurement/pollux_oospec_multipos_line_scan/settings'].attrs)
+        
+        # isolate relevant H5 group and get list of positions
+        h5group   = h5file['measurement/pollux_oospec_multipos_line_scan/positions']
+        
+        # read each position and return NirvanaUVVis object
+        samples_list = []
+        for poskey in h5group:
+            
+            if "Dark" in poskey:
+                dark_intensities = h5group[poskey]['spectral_data'][()]
+                continue
+            if "Blank" in poskey:
+                blank_intensities = h5group[poskey]['spectral_data'][()]
+                continue
+                
+            # get sample attributes
+            sample_attrs = dict(h5group[poskey].attrs)
+            
+            # fix some attributes
+            sample_attrs["x_center"] = h5group[poskey]['x_center'][()]
+            sample_attrs["y_center"] = h5group[poskey]['y_center'][()]
+            sample_attrs["x_positions"] = h5group[poskey]['x_positions'][()]
+            sample_attrs["y_positions"] = h5group[poskey]['y_positions'][()]
+            
+            # get raw intensities
+            try:
+                raw_intensities = h5group[poskey]['raw_intensities'][()]
+            except:
+                raw_intensities = h5group[poskey]['spectral_data'][()]
+    
+            
+            tray_well = number_to_well(int(poskey.split("_")[1])-2)
+            
+            # make it an object
+            uvvis_sample = NirvanaUVVis(sample_attrs=sample_attrs,
+                                        tray_well=tray_well,
+                                        wavelengths=wavelengths,
+                                        raw_intensities=raw_intensities,
+                                        blank_intensities=blank_intensities,
+                                        dark_intensities=dark_intensities,
+                                        erange=erange,
+                                        measurement_settings=measurement_settings,
+                                        carrier_attrs=carrier_attrs
+                                        )
+            
+            samples_list.append(uvvis_sample)
+    
     return samples_list

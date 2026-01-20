@@ -14,21 +14,24 @@ from scipy.integrate import simpson
 # internal modules
 import tksamples
 from tksamples.utils.plotting import plot_sample
+from tksamples.measurements.measurement import Measurement
 
 #%%
 
-class NirvanaUVVis:
+class NirvanaUVVis(Measurement):
     
     def __init__(self, sample_attrs=None, tray_well=None, wavelengths=None,
                  raw_intensities=None, blank_intensities=None, dark_intensities=None,
                  erange=None, measurement_settings=dict(), carrier_attrs=dict()):
         
-        # assign internal variables according to input
+        # initialize measurement
+        super().__init__(
+            sample_name = sample_attrs["sample_name"],
+            sample_uuid = sample_attrs["sample_uuid"]
+            )
         
         # set dataset ID
         self.tray_well    = tray_well
-        self.sample_name  = sample_attrs["sample_name"]
-        self.sample_uuid  = sample_attrs["sample_uuid"]
         self.sample_attrs = sample_attrs
         
         # set measurement data
@@ -38,7 +41,7 @@ class NirvanaUVVis:
         self._dark_intensities  = dark_intensities
         
         # calculate corrected intensities, transmissions, absorbances
-        self._initialize_sample()
+        self._initialize_uvvis()
         
         # set sample position on carrier
         self._set_sample_position()
@@ -52,7 +55,7 @@ class NirvanaUVVis:
         
         return
     
-    def _initialize_sample(self):
+    def _initialize_uvvis(self):
         
         # get corrected intensities (remove dark)
         self._cor_intensities = abs(np.clip(
@@ -101,9 +104,6 @@ class NirvanaUVVis:
     @property
     def nspots(self):
         return len(self.absorbances)
-    
-    def __repr__(self): #make it pretty
-        return f"{self.__class__.__name__}({self.sample_name})"
     
     # set erange
     def set_erange(self, erange=None, left=None, right=None):

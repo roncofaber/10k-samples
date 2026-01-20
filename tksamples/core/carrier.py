@@ -14,7 +14,7 @@ import tksamples
 from tksamples.read.h5tosample import h5_to_samples
 from tksamples.utils.plotting import plot_inhomogeneity, visualize_carrier
 from tksamples.core.core import NirvanaSamples
-from tksamples.utils.crucible import download_dataset_to_memory
+from tksamples.crucible.crucible import download_dataset_to_memory
 
 # os and other
 import os

@@ -34,12 +34,15 @@ class ThinFilm(object):
         # setup sample from scratch
         self._setup_sample()
         
+        if get_measurements:
+            self.get_measurements()
+        
         return
-    
+       
     def _setup_sample(self):
         
         # setup connection to client
-        self.client = self._get_crux_client()
+        self.client = self._setup_crux_client()
         
         # update info by connecting to the crux
         self._update_crucible_info()
@@ -54,7 +57,7 @@ class ThinFilm(object):
         return
         
     @staticmethod
-    def _get_crux_client():
+    def _setup_crux_client():
         from pycrucible import CrucibleClient
         api_url = 'https://crucible.lbl.gov/testapi'
         api_key = tksamples.get_crucible_api_key()
@@ -72,11 +75,14 @@ class ThinFilm(object):
                         match_measurements_to_sample(measurements, self)
                 
         return
-        
 
     @property
     def datasets(self):
         return self.dataset_info["datasets"]
+    
+    @property
+    def measurements(self):
+        return list(self._measurements.values())
     
     def __repr__(self): #make it pretty
         return f"{self.__class__.__name__}({self.sample_name})"
