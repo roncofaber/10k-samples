@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tksamples"
-description = "Analysis of UV-Vis spectroscopy data from 10k sample measurements"
+description = "Thin film sample characterization with multiple measurement types"
 readme = "README.md"
 authors = [
     {name = "roncofaber", email = "fabrice.roncoroni@gmail.com"}
@@ -42,7 +42,16 @@ Documentation = "https://github.com/roncofaber/10k-samples#readme"
 "Bug Tracker" = "https://github.com/roncofaber/10k-samples/issues"
 
 [tool.setuptools]
-packages = ["tksamples", "tksamples.read", "tksamples.measurements"]
+packages = [
+    "tksamples",
+    "tksamples.read",
+    "tksamples.measurements",
+    "tksamples.core",
+    "tksamples.utils",
+    "tksamples.crucible",
+    "tksamples.image",
+    "tksamples.examples"
+]
 
 [tool.setuptools.package-data]
 "tksamples.examples" = ["*.h5"]

@@ -10,6 +10,7 @@ Created on Tue Jan 13 14:40:26 2026
 import re
 
 # internal packages
+import tksamples
 from tksamples.read import h5_to_samples
 
 # scicomp
@@ -22,6 +23,13 @@ import requests
 from typing import Optional
 
 #%%
+
+# setup the crucible client
+def setup_crux_client():
+    from pycrucible import CrucibleClient
+    api_url = 'https://crucible.lbl.gov/testapi'
+    api_key = tksamples.get_crucible_api_key()
+    return CrucibleClient(api_url, api_key)
 
 # basic function that returns a BytesIO stream of a dataset
 def get_data_from_crux(signed_url):

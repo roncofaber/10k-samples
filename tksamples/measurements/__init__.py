@@ -1,7 +1,7 @@
 """
 Measurements module for tksamples
 
-Contains classes for analyzing UV-Vis spectroscopy measurements.
+Contains classes for analyzing various measurement types including UV-Vis spectroscopy.
 """
 
 from .uvvis import NirvanaUVVis

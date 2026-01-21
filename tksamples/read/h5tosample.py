@@ -37,10 +37,16 @@ def h5_to_samples_new(h5filename, erange=None):
         carrier_attrs = dict(h5file.attrs)
         
         # get wavelengths (same for all measurments)
-        wavelengths = h5file['measurement/pollux_oospec_multipos_line_scan/wavelengths'][()]
+        try:
+            wavelengths = h5file['measurement/pollux_oospec_multipos_line_scan/wavelengths'][()]
+        except:
+            wavelengths = h5file['wavelengths'][()]
         
         # get measurements settings
-        measurement_settings = dict(h5file['measurement/pollux_oospec_multipos_line_scan/settings'].attrs)
+        try:
+            measurement_settings = dict(h5file['measurement/pollux_oospec_multipos_line_scan/settings'].attrs)
+        except:
+            measurement_settings = dict(h5file['settings'].attrs)
         
         # isolate relevant H5 group and get list of positions
         h5group   = h5file['measurement/pollux_oospec_multipos_line_scan/positions']
@@ -111,8 +117,12 @@ def h5_to_samples_old(h5filename, erange=None):
             # fix some attributes
             sample_attrs["x_center"] = h5group[poskey]['x_center'][()]
             sample_attrs["y_center"] = h5group[poskey]['y_center'][()]
-            sample_attrs["x_positions"] = h5group[poskey]['x_positions'][()]
             sample_attrs["y_positions"] = h5group[poskey]['y_positions'][()]
+            try:
+                sample_attrs["x_positions"] = h5group[poskey]['x_positions'][()]
+            except:
+                sample_attrs["x_positions"] = np.array(
+                    [h5group[poskey]['x_center'][()]]*len(sample_attrs["y_positions"]))
             
             # get raw intensities
             try:
@@ -120,8 +130,15 @@ def h5_to_samples_old(h5filename, erange=None):
             except:
                 raw_intensities = h5group[poskey]['spectral_data'][()]
     
-            
+            # complete sample attributes
             tray_well = number_to_well(int(poskey.split("_")[1])-2)
+            
+            if "sample_name" not in sample_attrs:
+                sample_attrs["sample_name"] = poskey.split("_")[2]
+            if "sample_uuid" not in sample_attrs:
+                sample_attrs["sample_uuid"] = None
+            if "integration_time" not in sample_attrs:
+                sample_attrs["integration_time"] = float(measurement_settings["spec_integration_time"])
             
             # make it an object
             uvvis_sample = NirvanaUVVis(sample_attrs=sample_attrs,

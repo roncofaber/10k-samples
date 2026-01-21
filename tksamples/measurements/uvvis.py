@@ -37,9 +37,10 @@ class NirvanaUVVis(Measurement):
         # set measurement data
         self._wavelengths     = wavelengths
         self._raw_intensities = raw_intensities
-        self._blank_intensities = blank_intensities
-        self._dark_intensities  = dark_intensities
         
+        # initialize references
+        self._set_blank_and_dark(blank_intensities, dark_intensities)
+
         # calculate corrected intensities, transmissions, absorbances
         self._initialize_uvvis()
         
@@ -52,6 +53,21 @@ class NirvanaUVVis(Measurement):
         # assign measurement settings (if provided)
         self.measurement_settings = measurement_settings
         self.carrier_attrs = carrier_attrs
+        
+        return
+    
+    def _set_blank_and_dark(self, blank_intensities, dark_intensities):
+        
+        if blank_intensities.ndim == 2:
+            npos = len(blank_intensities)
+            blank_intensities = blank_intensities[npos//2]
+        if dark_intensities.ndim == 2:
+            npos = len(dark_intensities)
+            dark_intensities = dark_intensities[npos//2]
+        
+        # store arrays
+        self._blank_intensities = blank_intensities
+        self._dark_intensities  = dark_intensities
         
         return
     
@@ -105,6 +121,10 @@ class NirvanaUVVis(Measurement):
     def nspots(self):
         return len(self.absorbances)
     
+    @property
+    def int_time(self):
+        return self.sample_attrs["integration_time"]
+    
     # set erange
     def set_erange(self, erange=None, left=None, right=None):
         if erange is not None:
@@ -123,6 +143,9 @@ class NirvanaUVVis(Measurement):
     def _setup_emask(self):
         eleft, eright = self._erange
         self._emask = (self._wavelengths >= eleft) & (self._wavelengths <= eright)
+        
+        # self._emask[self._blank_intensities]
+        
         return
     
     # get inhomogenity within sample

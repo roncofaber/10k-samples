@@ -13,7 +13,8 @@ import numpy as np
 import tksamples
 from tksamples.read.h5tosample import h5_to_samples
 from tksamples.utils.plotting import plot_inhomogeneity
-from tksamples.crucible.crucible import get_uvvis_measurement, match_measurements_to_sample
+from tksamples.crucible.crucible import get_uvvis_measurement,\
+    match_measurements_to_sample, setup_crux_client
 
 # os and other
 import os
@@ -58,10 +59,7 @@ class ThinFilm(object):
         
     @staticmethod
     def _setup_crux_client():
-        from pycrucible import CrucibleClient
-        api_url = 'https://crucible.lbl.gov/testapi'
-        api_key = tksamples.get_crucible_api_key()
-        return CrucibleClient(api_url, api_key)
+        return setup_crux_client()
     
     def get_measurements(self):
         

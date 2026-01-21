@@ -16,6 +16,9 @@ from skimage.transform import hough_line, hough_line_peaks
 from skimage.feature import canny
 from skimage.filters import gaussian
 
+# internal modules
+from tksamples.utils.auxiliary import number_to_well
+
 #%%
 
 def isolate_carrier(image, threshold=0.31, max_object_size=500,
@@ -324,11 +327,15 @@ def carrier2samples(image, threshold=0.31, max_object_size=500, bar_height=20, b
     ]
 
     # Step 7: Extract 16 segments
-    segments = []
-    segment_info = []
-
+    segments = dict()
+    
+    idx = 0
     for row in range(4):
         for col in range(4):
+            
+            well_idx = number_to_well(idx)
+            segments[well_idx] = dict()
+            
             # Define boundaries for this segment
             x_start = max(0, x_grid[col])
             x_end = min(image_gray.shape[1], x_grid[col + 1])
@@ -337,22 +344,26 @@ def carrier2samples(image, threshold=0.31, max_object_size=500, bar_height=20, b
 
             # Extract the segment
             segment = image[y_start:y_end, x_start:x_end]
-            segments.append(segment)
-
-            segment_info.append({
-                'row': row,
-                'col': col,
-                'x_range': (x_start, x_end),
-                'y_range': (y_start, y_end),
-                'shape': segment.shape,
-            })
-
+            
+            # Store data in dict
+            segments[well_idx].update(
+                {
+                    "segment" : segment,
+                    "carrier_well" : number_to_well(idx),
+                    'row': row,
+                    'col': col,
+                    'x_range': (x_start, x_end),
+                    'y_range': (y_start, y_end),
+                    'shape': segment.shape,
+                })
+            idx += 1
+            
     grid_lines = {'x_grid': x_grid, 'y_grid': y_grid}
 
-    return segments, segment_info, image, grid_lines
+    return segments, image, grid_lines
 
 
-def visualize_segmentation(image, segments, segment_info, grid_lines):
+def visualize_segmentation(image, segments, grid_lines):
     """
     Visualize the segmentation result with grid overlay.
 
@@ -380,12 +391,12 @@ def visualize_segmentation(image, segments, segment_info, grid_lines):
         plt.axhline(y=y, color='blue', linestyle='-', alpha=0.7, linewidth=2)
 
     # Label segments
-    for info in segment_info:
-        x_center = (info['x_range'][0] + info['x_range'][1]) / 2
-        y_center = (info['y_range'][0] + info['y_range'][1]) / 2
+    for well_idx, segment in segments.items():
+        x_center = (segment['x_range'][0])+50# + segment['x_range'][1]) / 2
+        y_center = (segment['y_range'][0])+50# + segment['y_range'][1]) / 2
         text_color = 'white'
-        plt.text(x_center, y_center, f"({info['row']},{info['col']})",
-                ha='center', va='center', color=text_color, fontsize=10, fontweight='bold')
+        plt.text(x_center, y_center, f"{well_idx}",
+                ha='left', va='top', color=text_color, fontsize=10, fontweight='bold')
 
     plt.title('4x4 Grid Segmentation using Cross Detection')
     plt.axis('off')
@@ -395,12 +406,12 @@ def visualize_segmentation(image, segments, segment_info, grid_lines):
     fig, axes = plt.subplots(4, 4, figsize=(12, 12))
     fig.suptitle('16 Extracted Segments', fontsize=14)
 
-    for i, (segment, info) in enumerate(zip(segments, segment_info)):
-        row, col = info['row'], info['col']
+    for well_idx, segment in segments.items():
+        row, col = segment['row'], segment['col']
         ax = axes[row, col]
 
-        ax.imshow(segment, cmap='gray')
-        ax.set_title(f'({row},{col})', fontsize=8)
+        ax.imshow(segment["segment"], cmap='gray')
+        ax.set_title(f'{well_idx}', fontsize=8)
         ax.set_xticks([])
         ax.set_yticks([])
 
