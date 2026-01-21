@@ -7,8 +7,7 @@ measurement types including UV-Vis spectroscopy, imaging, and other analytical m
 
 # Core classes
 from .thinfilm import ThinFilm
-from .core import NirvanaSamples, NirvanaCarrier
-from .collections import NirvanaSamples as NirvanaSamplesList
+from .tksamples import TKSamples
 
 # Data reading and measurements
 from .read.h5tosample import h5_to_samples
@@ -36,9 +35,7 @@ __author__ = "roncofaber"
 
 __all__ = [
     "ThinFilm",
-    "NirvanaSamples",
-    "NirvanaCarrier",
-    "NirvanaSamplesList",
+    "TKSamples",
     "h5_to_samples",
     "NirvanaUVVis",
     "plot_sample",

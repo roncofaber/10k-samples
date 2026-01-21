@@ -15,10 +15,16 @@ from skimage import color, morphology, transform
 from skimage.transform import hough_line, hough_line_peaks
 from skimage.feature import canny
 from skimage.filters import gaussian
+from PIL import Image
 
 # internal modules
 from tksamples.utils.auxiliary import number_to_well
+import tksamples.crucible.crucible as tcrux
 
+# crux
+import mfid
+from pycrucible import BaseDataset
+    
 #%%
 
 def isolate_carrier(image, threshold=0.31, max_object_size=500,
@@ -417,3 +423,49 @@ def visualize_segmentation(image, segments, grid_lines):
 
     plt.tight_layout()
     plt.show()
+
+def upload_segments_to_crucible(og_dataset, segments):
+    
+    client = tcrux.setup_crux_client()
+
+    
+    sample_positions = og_dataset["metadata"]["sample_positions"]
+    
+    for car_well, sample_uuid in sample_positions.items():
+        
+        sample_data = client.get_sample(sample_uuid)
+        
+        new_mfid = mfid.mfid()[0]
+        
+        new_dataset = {  
+        "unique_id"    : new_mfid,
+        "measurement"  : "sample well image TEST",
+        'project_id'   : '10k_perovskites',
+        "dataset_name" : f"sample well image | {sample_data["sample_name"] }",
+        }
+        
+        for field in ["owner_orcid", "instrument_name", "public", "creation_time"]:
+            new_dataset.update({field : og_dataset[field]})
+            
+        crux_dataset = BaseDataset(**new_dataset)
+    
+        scientific_metadata = {
+            "sample_positions" : car_well,
+            "carrier_image_dataset_id" : og_dataset["unique_id"],
+            }
+        
+        
+        image_file = f"tmp_images/{new_mfid}.jpeg"
+        image_array = (segments[car_well]["segment"]* 255).astype(np.uint8)
+        img = Image.fromarray(image_array)
+        img.save(image_file)
+        
+        # upload
+        client.create_new_dataset_from_files(crux_dataset,
+                                             scientific_metadata=scientific_metadata,
+                                             keywords=["lil image"],
+                                             files_to_upload=[image_file])
+        
+        client.add_dataset_to_sample(dataset_id = new_mfid, sample_id = sample_uuid)
+        
+        return
