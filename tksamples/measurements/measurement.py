@@ -25,7 +25,22 @@ class Measurement(CruxObj):
         self._sample_name  = sample_name
         self._sample_mfid  = sample_mfid
         self.measurement_type = measurement_type
+        
+        self._is_assigned = False
     
+        return
+    
+    def _assign_to_sample(self, sample):
+        
+        if self.sample_mfid != sample.mfid:
+            raise ValueError(f"Measurement MFID {self.sample_mfid}"\
+                             f" does not match sample MFID {sample.mfid}")
+        if self._is_assigned:
+            raise ValueError(f"Measurement is already assigned to {self.sample}")
+                
+        self.sample = sample
+        self._is_assigned = True
+        
         return
     
     @property

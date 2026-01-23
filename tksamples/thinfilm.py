@@ -39,9 +39,7 @@ class ThinFilm(CruxObj):
     def add_measurement(self, new_measurement):
         """Add a measurement to thin film."""
         
-        if new_measurement.sample_mfid != self.mfid:
-            raise ValueError(f"Measurement MFID {new_measurement.sample_mfid}"\
-                             f" does not match sample MFID {self.mfid}")
+        new_measurement._assign_to_sample(self)
         
         self._measurements[new_measurement.mfid] = new_measurement
         

@@ -15,7 +15,7 @@ import numpy as np
 
 # internal modules
 from tksamples.core import CruxObj
-from tksamples.crucible.crucible import setup_crux_client, get_uvvis_measurement
+from tksamples.crucible.converters import get_uvvis_measurement
 from tksamples.read.tfparser import get_thin_films_from_crucible
 
 # to not make ppl waiting
@@ -48,9 +48,6 @@ class TKSamples(CruxObj):
         
         # set up internal structure
         self._setup_samples()
-        
-        # initialize crux
-        self.client = setup_crux_client()
         
         return
     
@@ -93,7 +90,9 @@ class TKSamples(CruxObj):
                 
         for uvvis in uvvis_data:
             sample = self.get_sample(uvvis.sample_mfid)
-            sample.add_measurement(uvvis)
+            
+            if sample is not None:
+                sample.add_measurement(uvvis)
             
         return
        

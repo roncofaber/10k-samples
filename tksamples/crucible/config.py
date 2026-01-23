@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Configuration management for tksamples
+Crucible Configuration Management
 
-Loads API keys and other configuration from:
+Loads Crucible API keys and configuration from:
 1. Environment variables (highest priority)
 2. INI config file in user config directory
 

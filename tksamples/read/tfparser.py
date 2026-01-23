@@ -13,7 +13,7 @@ Created on Tue Jan 20 16:57:19 2026
 
 # internal stuff
 from tksamples.thinfilm import ThinFilm
-from tksamples.crucible.crucible import setup_crux_client
+from tksamples.crucible.client import setup_crux_client
 
 #%%
 
