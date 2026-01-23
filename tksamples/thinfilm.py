@@ -20,10 +20,9 @@ class ThinFilm(CruxObj):
                  description=None, date_created=None, measurements=None,
                  **kwargs):
         
-        super().__init__()
+        super().__init__(mfid=unique_id, dtype="sample")
 
         # setup thin film data
-        self.unique_id    = unique_id
         self.sample_name  = sample_name
         self.datasets     = datasets if datasets is not None else []
         self.date_created = datetime.fromisoformat(date_created)
@@ -52,10 +51,6 @@ class ThinFilm(CruxObj):
     def measurements(self):
         return list(self._measurements.values())
 
-    @property
-    def mfid(self):
-        return self.unique_id
-    
     @property
     def age(self):
         """Returns the age of the object as a timedelta"""

@@ -34,7 +34,7 @@ class TKSamples(CruxObj):
     
     def __init__(self, samples=None, from_crucible=True):
         
-        super().__init__()
+        super().__init__(dtype="main")
 
         if samples is None and from_crucible:
             samples = get_thin_films_from_crucible()

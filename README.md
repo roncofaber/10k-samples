@@ -1,8 +1,8 @@
 # tksamples
 
-**Thin Film Sample Characterization and Analysis**
+**UV-Vis Spectroscopy and Thin Film Sample Analysis**
 
-`tksamples` is a Python package for characterizing thin film samples through multiple measurement types including UV-Vis spectroscopy, imaging, and other analytical methods.
+`tksamples` provides tools for UV-Vis spectroscopy analysis of thin film samples, with support for HDF5 data processing, Crucible API integration, and automated sample characterization workflows.
 
 ## Installation
 
@@ -11,35 +11,43 @@
 git clone https://github.com/roncofaber/10k-samples.git
 cd 10k-samples
 pip install -e .
+
+# For image processing features
+pip install -e ".[image]"
 ```
 
 ## Quick Start
 
+### Working with Crucible Database
+
 ```python
-from tksamples import ThinFilm
+from tksamples import TKSamples
 
-# Load thin film sample with automatic measurement retrieval
-sample = ThinFilm(uuid="your-sample-uuid", get_measurements=True)
-print(f"Sample: {sample.sample_name}")
-print(f"Available measurements: {len(sample.measurements)}")
+# Load thin film samples from Crucible
+tfilms = TKSamples()
+print(f"Loaded {tfilms.nsamples} samples")
 
-# Access UV-Vis measurement data
-uvvis_data = sample.measurements[0]  # First measurement
-uvvis_data.plot_sample()
+# Get UV-Vis measurements (automatically reads H5 files and associates with samples)
+tfilms.get_uvvis_data()
+
+# Access individual samples with their measurements
+sample = tfilms[0]
+print(f"Sample {sample.sample_name} has {len(sample.measurements)} measurements")
 ```
 
-### Legacy H5 File Analysis
+### Direct H5 File Analysis
 
 ```python
 from tksamples import h5_to_samples
 
-# Load samples from HDF5 file
-samples = h5_to_samples("your_data.h5", erange=[320, 650])
+# Load samples directly from HDF5 file
+samples = h5_to_samples("data.h5", erange=(320, 650))
 print(f"Loaded {len(samples)} samples")
 
-# Analyze first sample
-sample = samples[0]
-sample.plot_sample()
+# Analyze measurements
+for sample in samples:
+    sample.plot_sample()
+    inhomogeneity = sample.get_inhomogeneity()
 ```
 
 ## Requirements
@@ -47,11 +55,19 @@ sample.plot_sample()
 See `requirements.txt` for full dependency list. Python ≥ 3.8 required.
 
 **Core dependencies:**
-- h5py ≥ 3.7.0
-- numpy ≥ 1.21.0
-- scipy ≥ 1.7.0
-- matplotlib ≥ 3.5.0
-- seaborn ≥ 0.11.0
+- h5py ≥ 3.7.0 (HDF5 file handling)
+- numpy ≥ 1.21.0 (numerical computing)
+- scipy ≥ 1.7.0 (scientific computing)
+- matplotlib ≥ 3.5.0 (plotting)
+- seaborn ≥ 0.11.0 (statistical visualization)
+- tqdm ≥ 4.64.0 (progress bars)
+- qrcode ≥ 7.4.0 (QR code generation)
+- pillow ≥ 9.0.0 (image processing)
+- requests ≥ 2.28.0 (HTTP requests)
+
+**Optional dependencies:**
+- scikit-image ≥ 0.19.0 (for image analysis features)
+- pycrucible (for Crucible API access)
 
 ## Examples
 

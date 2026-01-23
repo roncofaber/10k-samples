@@ -15,22 +15,13 @@ class Measurement(CruxObj):
     
     def __init__(self, unique_id=None, sample_name=None, sample_mfid=None, measurement_type=None):
         
-        super().__init__()
+        super().__init__(mfid=unique_id, dtype="dataset")
         
-        self._unique_id    = unique_id
         self._sample_name  = sample_name
         self._sample_mfid  = sample_mfid
         self.measurement_type = measurement_type
     
         return
-    
-    @property
-    def mfid(self):
-        return self._unique_id
-    
-    @property
-    def unique_id(self):
-        return self._unique_id
     
     @property
     def sample_name(self):

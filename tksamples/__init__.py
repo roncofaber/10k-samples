@@ -1,8 +1,9 @@
 """
-tksamples: Thin Film Sample Characterization and Analysis
+tksamples: UV-Vis Spectroscopy and Thin Film Sample Analysis
 
-This package provides tools for characterizing thin film samples through multiple
-measurement types including UV-Vis spectroscopy, imaging, and other analytical methods.
+This package provides tools for UV-Vis spectroscopy analysis of thin film samples,
+with support for HDF5 data processing, Crucible API integration, and automated
+sample characterization workflows.
 """
 
 # Core classes
@@ -30,7 +31,7 @@ try:
 except ImportError:
     _HAS_IMAGE = False
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "roncofaber"
 
 __all__ = [
