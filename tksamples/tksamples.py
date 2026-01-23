@@ -10,52 +10,96 @@ Created on Tue Jan 20 11:17:33 2026
 import numpy as np
 
 # internal modules
-from tksamples.read.h5tosample import h5_to_samples
-from tksamples.utils.plotting import plot_inhomogeneity
+from tksamples.core import CruxObj
+from tksamples.crucible.crucible import setup_crux_client, get_uvvis_measurement
+from tksamples.read.tfparser import get_thin_films_from_crucible
 
-# os and other
-import os
-import glob
+# to not make ppl waiting
+from tqdm import tqdm
 
 #%%
 
-class TKSamples:
+#TODO make this better lol
+bad_datasets = [
+    # Trays 3/4, repeated measurements on same tray
+    "251218_130227_pollux_oospec_multipos_line_scan_TRAY3_4_1week",
+    "260107_151134_pollux_oospec_multipos_line_scan__TRAY3_4_4weeks",
+    "260109_111702_pollux_oospec_multipos_line_scan",
     
-    def __init__(self, h5files=None, erange=None, path=None,
-                 samples=None):
-        
-        # use a path to a folder to look up all h5 files
-        if path is not None:
-            abspath = os.path.abspath(path)
-            
-            h5files = glob.glob(f"{abspath}/*.h5")
-            h5files.sort()
-        
-        if samples is None:
-            # make sure it's a list
-            if isinstance(h5files, str):
-                h5files = [h5files]
-            
-            samples = []
-            for h5file in h5files:
-                temp_samples = h5_to_samples(h5file, erange=erange)
-                samples.extend(temp_samples)
+    # Trays 51/52, Tim fucked up
+    "260119_183317_pollux_oospec_multipos_line_scan"
+    ]
 
+class TKSamples(CruxObj):
+    
+    def __init__(self, samples=None, from_crucible=True):
+        
+        super().__init__()
+
+        if samples is None and from_crucible:
+            samples = get_thin_films_from_crucible()
+            
         # store samples
         self._samples = samples
         
-        # set them up
+        # set up internal structure
         self._setup_samples()
+        
+        # initialize crux
+        self.client = setup_crux_client()
         
         return
     
     def _setup_samples(self):
         
         # define sample map
-        self._sample_map = {sample.sample_uuid: sample for sample in self._samples}
-        
+        self._sample_map = {sample.unique_id: sample for sample in self._samples}
         
         return
+    
+    def get_measurements_datasets(self, mtype):
+        
+        measurement_datasets = {}
+        for dataset in self.samples_datasets:
+            if dataset["measurement"] == mtype:
+                
+                skip = False
+                for bad_data in bad_datasets:
+                    if bad_data in dataset["dataset_name"]:
+                        skip = True
+                        break
+                if skip:
+                    continue
+                
+                if dataset["unique_id"] not in measurement_datasets:
+                    measurement_datasets[dataset["unique_id"]] = dataset
+                    
+        return list(measurement_datasets.values())
+    
+    def get_uvvis_data(self):
+        
+        uvvis_datasets = self.get_measurements_datasets(
+            mtype="pollux_oospec_multipos_line_scan")
+        
+        uvvis_data = []
+        for dataset in tqdm(uvvis_datasets, desc="Getting UV-Vis", unit="dts", leave=False):
+            data = get_uvvis_measurement(self.client, dataset["unique_id"])
+            if data is not None:
+                uvvis_data.extend(data)
+                
+        for uvvis in uvvis_data:
+            sample = self.get_sample(uvvis.sample_mfid)
+            sample.add_measurement(uvvis)
+            
+        return
+       
+    
+    @property
+    def samples_datasets(self):
+        datasets = []
+        for tf in self:
+            datasets.extend(tf.datasets)
+        return datasets
     
     @property
     def samples(self):
@@ -64,27 +108,6 @@ class TKSamples:
     @property
     def nsamples(self):
         return len(self._samples)
-    
-    def set_erange(self, erange=None, left=None, right=None):
-        for sample in self:
-            sample.set_erange(erange=erange, left=left, right=right)
-        return
-    
-    # get inhomogenity of all samples
-    def get_inhomogeneities(self, value="cor_intensities", spots=None):
-        
-        # iterate over samples and get inhomogenity
-        inhomogenity = [sample.get_inhomogeneity(spots=spots, value=value) for sample in self]
-        
-        return inhomogenity
-    
-    # plot inhomogeneities
-    def plot_inhomogeneities(self, value="cor_intensities", spots=None):
-        
-        inhomogeneity = self.get_inhomogeneities(value=value, spots=spots)
-        
-        plot_inhomogeneity(inhomogeneity)
-        return
     
     # make class iterable
     def __len__(self):
@@ -98,34 +121,9 @@ class TKSamples:
         if isinstance(index, str):  # ID lookup
             return self._sample_map[index]
         elif isinstance(index, slice):  # slice
-            return TKSamples(samples=self.samples[index])
+            return TKSamples(samples=self.samples[index], from_crucible=False)
         else:  # integer index
             return self.samples[index]
-    
-    def __setitem__(self, index, value):
-        if isinstance(index, str):
-            # Update by ID
-            for i, sample in enumerate(self._samples):
-                if sample.id == index:
-                    self._samples[i] = value
-                    self._sample_map[index] = value
-                    return
-            raise KeyError(f"Sample with ID '{index}' not found")
-        else:
-            self._samples[index] = value
-            self._setup_samples()  # Rebuild map
-    
-    def __delitem__(self, index):
-        if isinstance(index, str):  # Delete by ID
-            for i, sample in enumerate(self._samples):
-                if sample.id == index:
-                    del self._samples[i]
-                    self._setup_samples()  # Rebuild map
-                    return
-            raise KeyError(f"Sample with ID '{index}' not found")
-        else:  # Delete by integer index
-            del self._samples[index]
-            self._setup_samples()  # Rebuild map
 
     def __contains__(self, sample):
         return sample in self.samples

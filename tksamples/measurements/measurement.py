@@ -6,14 +6,43 @@ Created on Fri Jan 16 18:22:21 2026
 @author: roncofaber
 """
 
-class Measurement(object):
+# internal modules
+from tksamples.core import CruxObj
+
+#%%
+
+class Measurement(CruxObj):
     
-    def __init__(self, sample_name=None, sample_uuid=None):
+    def __init__(self, unique_id=None, sample_name=None, sample_mfid=None, measurement_type=None):
         
-        self.sample_name  = sample_name
-        self.sample_uuid  = sample_uuid
+        super().__init__()
+        
+        self._unique_id    = unique_id
+        self._sample_name  = sample_name
+        self._sample_mfid  = sample_mfid
+        self.measurement_type = measurement_type
     
         return
     
+    @property
+    def mfid(self):
+        return self._unique_id
+    
+    @property
+    def unique_id(self):
+        return self._unique_id
+    
+    @property
+    def sample_name(self):
+        return self._sample_name
+    
+    @property
+    def sample_mfid(self):
+        return self._sample_mfid
+    
+    @property
+    def mtype(self):
+        return self.measurement_type.lower()
+    
     def __repr__(self): #make it pretty
-        return f"{self.__class__.__name__}({self.sample_name})"
+        return f"{self.measurement_type}({self.sample_name})"

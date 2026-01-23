@@ -8,11 +8,9 @@ Created on Mon Dec 22 10:42:15 2025
 
 # numpy is my rock and scipy is my gospel
 import numpy as np
-import scipy
 from scipy.integrate import simpson
 
 # internal modules
-import tksamples
 from tksamples.utils.plotting import plot_sample
 from tksamples.measurements.measurement import Measurement
 
@@ -20,23 +18,28 @@ from tksamples.measurements.measurement import Measurement
 
 class NirvanaUVVis(Measurement):
     
-    def __init__(self, sample_attrs=None, tray_well=None, wavelengths=None,
+    def __init__(self, unique_id=None, sample_attrs=None, tray_well=None, wavelengths=None,
                  raw_intensities=None, blank_intensities=None, dark_intensities=None,
-                 erange=None, measurement_settings=dict(), carrier_attrs=dict()):
+                 erange=None, measurement_settings=None, carrier_attrs=None):
         
+        # make safe copies to avoid shared references
+        safe_sample_attrs = sample_attrs.copy() if sample_attrs is not None else {}
+
         # initialize measurement
         super().__init__(
-            sample_name = sample_attrs["sample_name"],
-            sample_uuid = sample_attrs["sample_uuid"]
+            unique_id = unique_id,
+            sample_name = safe_sample_attrs.get("sample_name"),
+            sample_mfid = safe_sample_attrs.get("sample_uuid"),
+            measurement_type = "UVVis"
             )
-        
+
         # set dataset ID
         self.tray_well    = tray_well
-        self.sample_attrs = sample_attrs
+        self.sample_attrs = safe_sample_attrs
         
-        # set measurement data
-        self._wavelengths     = wavelengths
-        self._raw_intensities = raw_intensities
+        # set measurement data - make copies to avoid shared references
+        self._wavelengths     = wavelengths.copy() if wavelengths is not None else None
+        self._raw_intensities = raw_intensities.copy() if raw_intensities is not None else None
         
         # initialize references
         self._set_blank_and_dark(blank_intensities, dark_intensities)
@@ -50,25 +53,33 @@ class NirvanaUVVis(Measurement):
         # assign energy range (if provided)
         self.set_erange(erange=erange)
             
-        # assign measurement settings (if provided)
-        self.measurement_settings = measurement_settings
-        self.carrier_attrs = carrier_attrs
+        # assign measurement settings (if provided) - make copies to avoid shared references
+        self.measurement_settings = measurement_settings.copy() if measurement_settings is not None else {}
+        self.carrier_attrs = carrier_attrs.copy() if carrier_attrs is not None else {}
         
         return
     
     def _set_blank_and_dark(self, blank_intensities, dark_intensities):
-        
-        if blank_intensities.ndim == 2:
-            npos = len(blank_intensities)
-            blank_intensities = blank_intensities[npos//2]
-        if dark_intensities.ndim == 2:
-            npos = len(dark_intensities)
-            dark_intensities = dark_intensities[npos//2]
-        
-        # store arrays
-        self._blank_intensities = blank_intensities
-        self._dark_intensities  = dark_intensities
-        
+
+        # make safe copies to avoid shared references
+        if blank_intensities is not None:
+            blank_copy = blank_intensities.copy()
+            if blank_copy.ndim == 2:
+                npos = len(blank_copy)
+                blank_copy = blank_copy[npos//2]
+            self._blank_intensities = blank_copy
+        else:
+            self._blank_intensities = None
+
+        if dark_intensities is not None:
+            dark_copy = dark_intensities.copy()
+            if dark_copy.ndim == 2:
+                npos = len(dark_copy)
+                dark_copy = dark_copy[npos//2]
+            self._dark_intensities = dark_copy
+        else:
+            self._dark_intensities = None
+
         return
     
     def _initialize_uvvis(self):
@@ -81,7 +92,7 @@ class NirvanaUVVis(Measurement):
         cor_blank_intensities = abs(np.clip(
             self._blank_intensities - self._dark_intensities))
         
-        self._transmissions = self._cor_intensities/cor_blank_intensities.mean(axis=0)
+        self._transmissions = self._cor_intensities/cor_blank_intensities
         
         # calculcate absorbances
         self._absorbances = -np.log10(self._transmissions)
@@ -112,7 +123,7 @@ class NirvanaUVVis(Measurement):
     @property
     def raw_intensities(self):
         return self._raw_intensities[:,self._emask]
-    
+
     @property
     def cor_intensities(self):
         return self._cor_intensities[:,self._emask]

@@ -7,14 +7,13 @@ Created on Tue Jan 20 16:57:19 2026
 """
 
 # internal stuff
+from tksamples.thinfilm import ThinFilm
 from tksamples.crucible.crucible import setup_crux_client
 
 #%%
 
-
-
 def get_thin_films_from_crucible():
-    
+
     client = setup_crux_client()
     
     samples_datasets = client.list_samples(project_id="10k_perovskites", limit=999999)
@@ -23,4 +22,11 @@ def get_thin_films_from_crucible():
     for dataset in samples_datasets:
         if dataset["sample_name"].startswith("TF"):
             tf_datasets.append(dataset)
-    return sorted(tf_datasets, key=lambda x: x["sample_name"])
+    tf_datasets = sorted(tf_datasets, key=lambda x: x["sample_name"])
+    
+    thin_films = []
+    for dataset in tf_datasets:
+        tf = ThinFilm(**dataset)
+        thin_films.append(tf)
+
+    return thin_films

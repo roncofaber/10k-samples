@@ -23,3 +23,43 @@ def number_to_well(n):
     col = (n % 4) + 1
     
     return f"{row}{col}"
+
+#%%
+
+def filter_links(links):
+    """
+    If multiple links are provided, return the dict entry containing 'corrected'.
+    Otherwise, return the single link dict or string.
+    Returns empty dict if no links found.
+    """
+    if isinstance(links, str):
+        return links
+    
+    if isinstance(links, dict):
+        if len(links) == 0:
+            return {}
+        
+        if len(links) == 1:
+            return links
+        
+        # Multiple links - find the one with 'corrected' in the key
+        for key, url in links.items():
+            if 'corrected' in key.lower():
+                return {key: url}
+        
+        # Fallback to first entry
+        first_key = list(links.keys())[0]
+        return {first_key: links[first_key]}
+    
+    # If it's a list
+    if len(links) == 0:
+        return []
+    
+    if len(links) == 1:
+        return links[0]
+    
+    for link in links:
+        if 'corrected' in link.lower():
+            return link
+    
+    return links[0]

@@ -8,12 +8,10 @@ from .crucible import (
     get_data_from_crux,
     get_uvvis_measurement,
     download_dataset_to_memory,
-    match_measurements_to_sample
 )
 
 __all__ = [
     "get_data_from_crux",
     "get_uvvis_measurement",
     "download_dataset_to_memory",
-    "match_measurements_to_sample"
 ]

@@ -12,6 +12,7 @@ import re
 # internal packages
 import tksamples
 from tksamples.read import h5_to_samples
+from tksamples.utils.auxiliary import filter_links
 
 # scicomp
 import numpy as np
@@ -33,19 +34,35 @@ def setup_crux_client():
 
 # basic function that returns a BytesIO stream of a dataset
 def get_data_from_crux(signed_url):
+
+    if isinstance(signed_url, dict):
+        signed_url = next(iter(signed_url.values()))
+    
     try:
         response = requests.get(signed_url, timeout=30)
         response.raise_for_status()
         return BytesIO(response.content)
-    except (requests.RequestException, Image.UnidentifiedImageError):
+    except requests.RequestException:
         return
+
+def get_links_with_extension(client, dsid, ending):
     
+    all_links = client.get_dataset_download_links(dsid)
+    
+    valid_links = {}
+    for datafile, link in all_links.items():
+        if datafile.endswith(ending):
+            valid_links[datafile] = link
+
+    return filter_links(valid_links)
+
 def get_uvvis_measurement(client, dsid):
-    links = client.get_dataset_download_links(dsid)
-    for link in links:
-        if link.endswith(".h5"):
-            l2down = links[link]
-    return h5_to_samples(get_data_from_crux(l2down))
+    link = get_links_with_extension(client, dsid, ".h5")
+    
+    if link:
+        return h5_to_samples(get_data_from_crux(link))
+    else:
+        return
 
 
 # function to get carrier image from uuid
@@ -72,10 +89,3 @@ def download_dataset_to_memory(client, dsid: str, file_name: Optional[str] = Non
         img = Image.open(data)
         images[fname.split("/")[-1]] = np.array(img)
     return images
-
-def match_measurements_to_sample(measurements, sample):
-    valid_measurements = []
-    for measurement in measurements:
-        if measurement.sample_uuid == sample.uuid:
-            valid_measurements.append(measurement)
-    return measurement

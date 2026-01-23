@@ -70,16 +70,18 @@ def h5_to_samples_new(h5filename, erange=None):
             tray_well = number_to_well(int(poskey.split("_")[1]))
             
             # make it an object
-            uvvis_sample = NirvanaUVVis(sample_attrs=sample_attrs,
-                                        tray_well=tray_well,
-                                        wavelengths=wavelengths,
-                                        raw_intensities=raw_intensities,
-                                        blank_intensities=blank_intensities,
-                                        dark_intensities=dark_intensities,
-                                        erange=erange,
-                                        measurement_settings=measurement_settings,
-                                        carrier_attrs=carrier_attrs
-                                        )
+            uvvis_sample = NirvanaUVVis(
+                unique_id=carrier_attrs["unique_id"],
+                sample_attrs=sample_attrs,
+                tray_well=tray_well,
+                wavelengths=wavelengths,
+                raw_intensities=raw_intensities,
+                blank_intensities=blank_intensities,
+                dark_intensities=dark_intensities,
+                erange=erange,
+                measurement_settings=measurement_settings,
+                carrier_attrs=carrier_attrs
+                )
             
             samples_list.append(uvvis_sample)
                 

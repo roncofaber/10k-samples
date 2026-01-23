@@ -6,82 +6,69 @@ Created on Wed Jan  7 17:53:17 2026
 @author: roncofaber
 """
 
-# usual
-import numpy as np
-
 # internal modules
-import tksamples
-from tksamples.read.h5tosample import h5_to_samples
-from tksamples.utils.plotting import plot_inhomogeneity
-from tksamples.crucible.crucible import get_uvvis_measurement,\
-    match_measurements_to_sample, setup_crux_client
+from tksamples.core import CruxObj
 
 # os and other
-import os
-import glob
+from datetime import datetime, timezone
 
 #%%
 
-class ThinFilm(object):
+class ThinFilm(CruxObj):
     
-    def __init__(self, uuid=None, measurements=dict(), get_measurements=False):
+    def __init__(self, unique_id=None, sample_name=None, datasets=None,
+                 description=None, date_created=None, measurements=None,
+                 **kwargs):
         
-        # initialize sample arrays
-        self._measurements = measurements
-        
-        # set TF uuid
-        self.uuid = uuid
-        
-        # setup sample from scratch
-        self._setup_sample()
-        
-        if get_measurements:
-            self.get_measurements()
-        
-        return
-       
-    def _setup_sample(self):
-        
-        # setup connection to client
-        self.client = self._setup_crux_client()
-        
-        # update info by connecting to the crux
-        self._update_crucible_info()
-        
-        # assign important variables
-        self.sample_name = self.dataset_info["sample_name"]
-        
+        super().__init__()
+
+        # setup thin film data
+        self.unique_id    = unique_id
+        self.sample_name  = sample_name
+        self.datasets     = datasets if datasets is not None else []
+        self.date_created = datetime.fromisoformat(date_created)
+
+        # initialize measurements storage
+        self._measurements = measurements if measurements is not None else {}
+
         return
     
-    def _update_crucible_info(self):
-        self.dataset_info = self.client.get_sample(self.uuid)
-        return
+    def add_measurement(self, new_measurement):
+        """Add a measurement to thin film."""
         
-    @staticmethod
-    def _setup_crux_client():
-        return setup_crux_client()
-    
-    def get_measurements(self):
+        if new_measurement.sample_mfid != self.mfid:
+            raise ValueError(f"Measurement MFID {new_measurement.sample_mfid}"\
+                             f" does not match sample MFID {self.mfid}")
         
-        for dataset in self.datasets:
-            if dataset["measurement"] == "pollux_oospec_multipos_line_scan":
-                if dataset["unique_id"] in self._measurements:
-                    continue
-                else:
-                    measurements = get_uvvis_measurement(self.client, dataset["unique_id"])
-                    self._measurements[dataset["unique_id"]] = \
-                        match_measurements_to_sample(measurements, self)
-                
+        self._measurements[new_measurement.mfid] = new_measurement
+        
         return
 
-    @property
-    def datasets(self):
-        return self.dataset_info["datasets"]
+    def get_measurements(self, mtype=""):
+        """Get all measurements filtered by type."""
+        return self._measurements
     
     @property
     def measurements(self):
         return list(self._measurements.values())
+
+    @property
+    def mfid(self):
+        return self.unique_id
     
+    @property
+    def age(self):
+        """Returns the age of the object as a timedelta"""
+        # If created_at is naive, use naive now
+        if self.date_created.tzinfo is None:
+            now = datetime.now()
+        else:
+            now = datetime.now(timezone.utc)
+        
+        return now - self.date_created
+        
     def __repr__(self): #make it pretty
         return f"{self.__class__.__name__}({self.sample_name})"
+    
+
         
