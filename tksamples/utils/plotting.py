@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan  8 13:39:01 2026
+Plotting Utilities: Sample Visualization and Analysis
 
+Provides plotting functions for UV-Vis sample visualization, inhomogeneity
+analysis, and carrier visualization with customizable styling and scientific
+presentation formatting.
+
+Created on Thu Jan  8 13:39:01 2026
 @author: roncofaber
 """
 

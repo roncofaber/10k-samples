@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 22 17:34:02 2026
+Core: Base Classes and Crucible Integration
 
+Provides CruxObj base class with Crucible API client setup and QR code
+generation functionality for sample identification and tracking.
+
+Created on Thu Jan 22 17:34:02 2026
 @author: roncofaber
 """
 

@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan  7 17:53:17 2026
+ThinFilm: Individual Thin Film Sample Management
 
+Class representing individual thin film samples with measurement storage,
+QR code generation, and Crucible integration for metadata and analysis.
+
+Created on Wed Jan  7 17:53:17 2026
 @author: roncofaber
 """
 

@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 22 10:42:15 2025
+NirvanaUVVis: UV-Vis Spectroscopy Measurement Processing
 
+Handles UV-Vis spectroscopy data from Nirvana measurement system including
+dark/blank correction, transmittance/absorbance calculations, and sample
+inhomogeneity analysis with automated energy range filtering.
+
+Created on Mon Dec 22 10:42:15 2025
 @author: roncofaber
 """
 

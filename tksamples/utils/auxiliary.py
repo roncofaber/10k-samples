@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jan 16 17:32:08 2026
+Auxiliary Utilities: Helper Functions
 
+Contains utility functions for well position conversion and data filtering
+used across the tksamples package for sample identification and data processing.
+
+Created on Fri Jan 16 17:32:08 2026
 @author: roncofaber
 """
 

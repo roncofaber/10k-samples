@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 22 15:24:53 2025
+H5 to Sample: HDF5 Data Reader and Parser
 
+Converts HDF5 files from Nirvana UV-Vis measurements into NirvanaUVVis sample
+objects with support for both new and legacy file formats, automatic carrier
+attribute extraction, and energy range filtering.
+
+Created on Mon Dec 22 15:24:53 2025
 @author: roncofaber
 """
 

@@ -1,9 +1,11 @@
 """
 Measurements module for tksamples
 
-Contains classes for analyzing various measurement types including UV-Vis spectroscopy.
+Contains base and specific measurement classes for analyzing various measurement
+types including UV-Vis spectroscopy with support for data processing and analysis.
 """
 
+from .measurement import Measurement
 from .uvvis import NirvanaUVVis
 
-__all__ = ["NirvanaUVVis"]
+__all__ = ["Measurement", "NirvanaUVVis"]

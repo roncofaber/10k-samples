@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan 13 14:40:26 2026
+Crucible Integration: API Client and Data Download
 
+Provides Crucible API client setup, dataset download functionality, and
+automated UV-Vis measurement retrieval with support for signed URLs,
+image processing, and data filtering for sample characterization workflows.
+
+Created on Tue Jan 13 14:40:26 2026
 @author: roncofaber
 """
 

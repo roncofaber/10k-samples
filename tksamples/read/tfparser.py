@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan 20 16:57:19 2026
+Thin Film Parser: Crucible Sample Retrieval
 
+Retrieves and parses thin film sample metadata from Crucible database,
+filtering TF-prefixed samples and creating ThinFilm objects for the
+10k perovskites project dataset management.
+
+Created on Tue Jan 20 16:57:19 2026
 @author: roncofaber
 """
 

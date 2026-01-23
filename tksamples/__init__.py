@@ -12,11 +12,12 @@ from .tksamples import TKSamples
 
 # Data reading and measurements
 from .read.h5tosample import h5_to_samples
+from .measurements.measurement import Measurement
 from .measurements.uvvis import NirvanaUVVis
 
 # Configuration and utilities
 from .config import get_crucible_api_key, create_config_file, get_config_file_path
-from .utils import plot_sample, plot_inhomogeneity, visualize_carrier
+from .utils import number_to_well, filter_links, plot_sample, plot_inhomogeneity, visualize_carrier
 
 # Optional imports with graceful fallback
 try:
@@ -38,7 +39,10 @@ __all__ = [
     "ThinFilm",
     "TKSamples",
     "h5_to_samples",
+    "Measurement",
     "NirvanaUVVis",
+    "number_to_well",
+    "filter_links",
     "plot_sample",
     "plot_inhomogeneity",
     "visualize_carrier",

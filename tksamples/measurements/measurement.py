@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jan 16 18:22:21 2026
+Measurement: Base Class for All Measurement Types
 
+Provides the abstract Measurement class that serves as a foundation for
+specific measurement implementations like UV-Vis spectroscopy, with common
+properties for sample identification and metadata management.
+
+Created on Fri Jan 16 18:22:21 2026
 @author: roncofaber
 """
 

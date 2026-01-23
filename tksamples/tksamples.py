@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan 20 11:17:33 2026
+TKSamples: Thin Film Collection Management
 
+Main container class for managing collections of thin film samples with integrated
+Crucible API access for automated data retrieval and measurement association.
+
+Created on Tue Jan 20 11:17:33 2026
 @author: roncofaber
 """
 
