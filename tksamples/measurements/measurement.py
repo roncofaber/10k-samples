@@ -18,9 +18,15 @@ from tksamples.core import CruxObj
 
 class Measurement(CruxObj):
     
-    def __init__(self, unique_id=None, sample_name=None, sample_mfid=None, measurement_type=None):
+    def __init__(self, dataset=None, sample_name=None, sample_mfid=None,
+                 measurement_type=None, creation_time=None):
         
-        super().__init__(mfid=unique_id, dtype="dataset")
+        dataset = dataset.copy()
+        
+        super().__init__(mfid=dataset["unique_id"],
+                         dtype="dataset",
+                         creation_time=dataset["creation_time"]
+                         )
         
         self._sample_name  = sample_name
         self._sample_mfid  = sample_mfid

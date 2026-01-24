@@ -38,7 +38,7 @@ class TKSamples(CruxObj):
     
     def __init__(self, samples=None, from_crucible=True):
         
-        super().__init__(dtype="main")
+        super().__init__(dtype="main", creation_time="2026-01-01T00:00:00.0000-08:00")
 
         if samples is None and from_crucible:
             samples = get_thin_films_from_crucible()
@@ -84,6 +84,7 @@ class TKSamples(CruxObj):
         
         uvvis_data = []
         for dataset in tqdm(uvvis_datasets, desc="Getting UV-Vis", unit="dts", leave=False):
+
             data = get_uvvis_measurement(self.client, dataset["unique_id"])
             if data is not None:
                 uvvis_data.extend(data)

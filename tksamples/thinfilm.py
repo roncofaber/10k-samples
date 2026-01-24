@@ -13,9 +13,6 @@ Created on Wed Jan  7 17:53:17 2026
 # internal modules
 from tksamples.core import CruxObj
 
-# os and other
-from datetime import datetime, timezone
-
 #%%
 
 class ThinFilm(CruxObj):
@@ -24,12 +21,11 @@ class ThinFilm(CruxObj):
                  description=None, date_created=None, measurements=None,
                  **kwargs):
         
-        super().__init__(mfid=unique_id, dtype="sample")
+        super().__init__(mfid=unique_id, dtype="sample", creation_time=date_created)
 
         # setup thin film data
         self.sample_name  = sample_name
         self.datasets     = datasets if datasets is not None else []
-        self.date_created = datetime.fromisoformat(date_created)
 
         # initialize measurements storage
         self._measurements = measurements if measurements is not None else {}
@@ -52,17 +48,6 @@ class ThinFilm(CruxObj):
     @property
     def measurements(self):
         return list(self._measurements.values())
-
-    @property
-    def age(self):
-        """Returns the age of the object as a timedelta"""
-        # If created_at is naive, use naive now
-        if self.date_created.tzinfo is None:
-            now = datetime.now()
-        else:
-            now = datetime.now(timezone.utc)
-        
-        return now - self.date_created
         
     def __repr__(self): #make it pretty
         return f"{self.__class__.__name__}({self.sample_name})"

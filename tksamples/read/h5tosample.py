@@ -23,9 +23,9 @@ import h5py
 
 #%%
 
-def h5_to_samples(h5filename, erange=None):
+def h5_to_samples(dataset, h5filename, erange=None):
     try:
-        samples = h5_to_samples_new(h5filename, erange=erange)
+        samples = h5_to_samples_new(dataset, h5filename, erange=erange)
     except:
         try:
             samples = h5_to_samples_old(h5filename, erange=erange)
@@ -33,7 +33,28 @@ def h5_to_samples(h5filename, erange=None):
             raise ValueError
     return samples
 
-def h5_to_samples_new(h5filename, erange=None):
+
+def attrs2uvvis(dataset, sample_attrs, tray_well, wavelengths, raw_intensities,
+                blank_intensities, dark_intensities, erange, measurement_settings,
+                carrier_attrs):
+    
+    # make it an object
+    uvvis_sample = NirvanaUVVis(
+        dataset=dataset,
+        sample_attrs=sample_attrs,
+        tray_well=tray_well,
+        wavelengths=wavelengths,
+        raw_intensities=raw_intensities,
+        blank_intensities=blank_intensities,
+        dark_intensities=dark_intensities,
+        erange=erange,
+        measurement_settings=measurement_settings,
+        carrier_attrs=carrier_attrs
+        )
+    
+    return uvvis_sample
+
+def h5_to_samples_new(dataset, h5filename, erange=None):
     
     
     with h5py.File(h5filename, 'r') as h5file:
@@ -74,25 +95,16 @@ def h5_to_samples_new(h5filename, erange=None):
             
             tray_well = number_to_well(int(poskey.split("_")[1]))
             
-            # make it an object
-            uvvis_sample = NirvanaUVVis(
-                unique_id=carrier_attrs["unique_id"],
-                sample_attrs=sample_attrs,
-                tray_well=tray_well,
-                wavelengths=wavelengths,
-                raw_intensities=raw_intensities,
-                blank_intensities=blank_intensities,
-                dark_intensities=dark_intensities,
-                erange=erange,
-                measurement_settings=measurement_settings,
-                carrier_attrs=carrier_attrs
-                )
+            uvvis_sample = attrs2uvvis(dataset, sample_attrs, tray_well,
+                                       wavelengths, raw_intensities,
+                                       blank_intensities, dark_intensities,
+                                       erange, measurement_settings, carrier_attrs)
             
             samples_list.append(uvvis_sample)
                 
     return samples_list
 
-def h5_to_samples_old(h5filename, erange=None):
+def h5_to_samples_old(dataset, h5filename, erange=None):
     with h5py.File(h5filename, 'r') as h5file:
         
         # get carrier information
@@ -148,16 +160,10 @@ def h5_to_samples_old(h5filename, erange=None):
                 sample_attrs["integration_time"] = float(measurement_settings["spec_integration_time"])
             
             # make it an object
-            uvvis_sample = NirvanaUVVis(sample_attrs=sample_attrs,
-                                        tray_well=tray_well,
-                                        wavelengths=wavelengths,
-                                        raw_intensities=raw_intensities,
-                                        blank_intensities=blank_intensities,
-                                        dark_intensities=dark_intensities,
-                                        erange=erange,
-                                        measurement_settings=measurement_settings,
-                                        carrier_attrs=carrier_attrs
-                                        )
+            uvvis_sample = attrs2uvvis(dataset, sample_attrs, tray_well,
+                                       wavelengths, raw_intensities,
+                                       blank_intensities, dark_intensities,
+                                       erange, measurement_settings, carrier_attrs)
             
             samples_list.append(uvvis_sample)
     

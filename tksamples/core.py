@@ -12,8 +12,8 @@ Created on Thu Jan 22 17:34:02 2026
 
 # handy packages
 import qrcode
-from IPython.display import display, HTML
 import webbrowser
+from datetime import datetime, timezone
 
 # import client setup (safe from circular imports)
 from tksamples.crucible.client import setup_crux_client
@@ -23,7 +23,6 @@ from tksamples.crucible.client import setup_crux_client
 dtype2ext = {
     "sample"  : "sample-graph",
     "dataset" : "dataset",
-    "main"    : ""
     }
 
 class CruxObj(object):
@@ -31,12 +30,13 @@ class CruxObj(object):
     # Class variable for the client
     _client = setup_crux_client()
     
-    def __init__(self, mfid=None, dtype=None):
+    def __init__(self, mfid=None, dtype=None, creation_time=None):
         
         # add data type
         self._dtype     = dtype
         self._unique_id = mfid
-    
+        self._creation_time = datetime.fromisoformat(creation_time)
+
         return
     
     @property
@@ -70,3 +70,12 @@ class CruxObj(object):
     def open_in_browser(self):
         webbrowser.open(self.link)
         return
+    
+    @property
+    def age(self):
+        """Returns the age of the object as a timedelta"""
+        if self._creation_time.tzinfo is None:
+            now = datetime.now()
+        else:
+            now = datetime.now(timezone.utc)
+        return now - self._creation_time

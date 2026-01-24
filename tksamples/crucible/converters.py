@@ -20,8 +20,9 @@ from .client import get_links_with_extension, get_data_from_crux
 def get_uvvis_measurement(client, dsid):
     """Convert Crucible dataset to UV-Vis measurement objects."""
     link = get_links_with_extension(client, dsid, ".h5")
+    dataset = client.get_dataset(dsid)
 
     if link:
-        return h5_to_samples(get_data_from_crux(link))
+        return h5_to_samples(dataset, get_data_from_crux(link))
     else:
         return

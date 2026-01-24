@@ -23,7 +23,7 @@ from tksamples.measurements.measurement import Measurement
 
 class NirvanaUVVis(Measurement):
     
-    def __init__(self, unique_id=None, sample_attrs=None, tray_well=None, wavelengths=None,
+    def __init__(self, dataset=None, sample_attrs=None, tray_well=None, wavelengths=None,
                  raw_intensities=None, blank_intensities=None, dark_intensities=None,
                  erange=None, measurement_settings=None, carrier_attrs=None):
         
@@ -32,7 +32,7 @@ class NirvanaUVVis(Measurement):
 
         # initialize measurement
         super().__init__(
-            unique_id = unique_id,
+            dataset = dataset,
             sample_name = safe_sample_attrs.get("sample_name"),
             sample_mfid = safe_sample_attrs.get("sample_uuid"),
             measurement_type = "UVVis"
