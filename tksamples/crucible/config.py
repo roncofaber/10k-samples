@@ -47,7 +47,9 @@ def get_crucible_api_key():
             f"2. Config file: Create {config_file} with:\n"
             f"   [crucible]\n"
             f"   api_key = your_key_here\n"
-            f"\nUse create_config_file() to create the config file automatically."
+            f"\nUse create_config_file() to create the config file automatically:\n"
+            f"from tksamples.crucible.config import create_config_file\n"
+            f"create_config_file('your_key_here')"
         )
 
     return _crucible_api_key

@@ -1,6 +1,6 @@
 # 10k Thin Film Sample Analysis
 
-`tksamples` provides tools for the multimodal analysis of 10,000 thin film samples, integrating the Crucible API integration to enable automated sample characterization workflows.
+`tksamples` is the main Python interface for the analysis of the multimodal datasets of 10,000 thin film samples. It integrates the [Crucible API](https://crucible.lbl.gov/) to enable automated sample characterization workflows.
 
 ## Installation
 

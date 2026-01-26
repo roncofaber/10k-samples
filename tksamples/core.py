@@ -29,6 +29,7 @@ class CruxObj(object):
 
     # Class variable for the client
     _client = setup_crux_client()
+
     
     def __init__(self, mfid=None, dtype=None, creation_time=None):
         

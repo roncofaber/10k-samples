@@ -28,7 +28,7 @@ def h5_to_samples(dataset, h5filename, erange=None):
         samples = h5_to_samples_new(dataset, h5filename, erange=erange)
     except:
         try:
-            samples = h5_to_samples_old(h5filename, erange=erange)
+            samples = h5_to_samples_old(dataset, h5filename, erange=erange)
         except:
             raise ValueError
     return samples
