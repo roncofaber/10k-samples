@@ -11,20 +11,20 @@ from .crucible import get_crucible_api_key, create_config_file, get_config_file_
 
 # Core classes
 from .thinfilm import ThinFilm
-from .tksamples import TKSamples
+from .thinfilms import ThinFilms
 
 # Data reading and measurements
-from .measurements.measurement import Measurement
-from .measurements.uvvis import NirvanaUVVis
+from .measurements import Measurement, NirvanaUVVis, TFImage
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = "roncofaber"
 
 __all__ = [
     "ThinFilm",
-    "TKSamples",
+    "ThinFilms",
     "Measurement",
     "NirvanaUVVis",
+    "TFImage",
     "get_crucible_api_key",
     "create_config_file",
     "get_config_file_path"

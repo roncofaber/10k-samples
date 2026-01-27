@@ -17,7 +17,6 @@ from .config import (
 from .client import (
     setup_crux_client,
     get_data_from_crux,
-    download_dataset_to_memory,
     get_links_with_extension,
 )
 
@@ -30,7 +29,6 @@ __all__ = [
     "get_config_file_path",
     "setup_crux_client",
     "get_data_from_crux",
-    "download_dataset_to_memory",
     "get_links_with_extension",
     # "get_uvvis_measurement",  # Available in .converters but not exported here
 ]

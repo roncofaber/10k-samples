@@ -16,13 +16,17 @@ pip install -e .
 ### Working with Crucible Database
 
 ```python
-from tksamples import TKSamples
+# Load relevant modules
+from tksamples import ThinFilms  # Import the ThinFilms class from the tksamples package
 
-# Load thin film samples from Crucible
-tfilms = TKSamples(from_crucible=True)
-print(f"Loaded {tfilms.nsamples} samples")
+# Initialize the ThinFilms object
+# Use cache to avoid redundant downloads and set overwrite_cache to False
+tfilms = ThinFilms(from_crucible=True, use_cache=True, overwrite_cache=False)
 
-# Get UV-Vis measurements (automatically get data from Crucible and associates with samples)
+# Retrieve well images for the thin films
+tfilms.get_well_images()
+
+# Retrieve UV-Vis data for the thin films
 tfilms.get_uvvis_data()
 
 # Access individual samples with their measurements

@@ -6,7 +6,6 @@ Functions for carrier segmentation and sample isolation from images.
 
 from .carrier2samples import (
     isolate_carrier,
-    find_carrier_tilt,
     find_horizontal_peaks,
     create_cross_mask,
     find_cross_peaks_at_y,
@@ -16,7 +15,6 @@ from .carrier2samples import (
 
 __all__ = [
     "isolate_carrier",
-    "find_carrier_tilt",
     "find_horizontal_peaks",
     "create_cross_mask",
     "find_cross_peaks_at_y",

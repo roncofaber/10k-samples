@@ -23,12 +23,15 @@ from tksamples.crucible.client import setup_crux_client
 dtype2ext = {
     "sample"  : "sample-graph",
     "dataset" : "dataset",
+    "main"    : "",
     }
 
 class CruxObj(object):
 
     # Class variable for the client
     _client = setup_crux_client()
+    
+    __slots__ = ["_dtype", "_unique_id", "_creation_time"]
 
     
     def __init__(self, mfid=None, dtype=None, creation_time=None):

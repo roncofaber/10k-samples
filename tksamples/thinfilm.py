@@ -29,6 +29,12 @@ class ThinFilm(CruxObj):
 
         # initialize measurements storage
         self._measurements = measurements if measurements is not None else {}
+        
+        # Set to track measurement types
+        self._measurement_types = set()
+        
+        self.uvvis = None
+        self.image = None
 
         return
     
@@ -39,10 +45,20 @@ class ThinFilm(CruxObj):
         
         self._measurements[new_measurement.mfid] = new_measurement
         
+        # Add the measurement type to the set
+        self._measurement_types.add(new_measurement.mtype)  # Assuming new_measurement has a 'mtype' attribute.
+        
+        if new_measurement.mtype == "uvvis":
+            self.uvvis = new_measurement
+        elif new_measurement.mtype == "image":
+            self.image = new_measurement
+        
         return
 
     def get_measurements(self, mtype=""):
         """Get all measurements filtered by type."""
+        if mtype:
+            return {key: value for key, value in self._measurements.items() if value.mtype == mtype}
         return self._measurements
     
     @property
@@ -52,5 +68,12 @@ class ThinFilm(CruxObj):
     def __repr__(self): #make it pretty
         return f"{self.__class__.__name__}({self.sample_name})"
     
+    def view(self):
+        
+        if self.image is None:
+            print("No image associated with this TF.")
+            return
+        
+        self.image.view()
 
         

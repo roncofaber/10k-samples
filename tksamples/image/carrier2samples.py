@@ -10,24 +10,50 @@ Created on Thu Jan 15 13:55:47 2026
 import numpy as np
 from scipy.signal import find_peaks
 
+from scipy.stats import linregress
 # image recognition
 from skimage import color, morphology, transform
 from skimage.transform import hough_line, hough_line_peaks
 from skimage.feature import canny
 from skimage.filters import gaussian
-from PIL import Image
+from skimage import io, color, measure
 
 # internal modules
 from tksamples.utils.auxiliary import number_to_well
-import tksamples.crucible.crucible as tcrux
-
-# crux
-import mfid
-from pycrucible import BaseDataset
     
 #%%
 
-def isolate_carrier(image, threshold=0.31, max_object_size=500,
+def get_tilt_angle(binary):
+    
+    # Label connected components in the binary image
+    label_image, num_labels = measure.label(binary, connectivity=2, return_num=True)
+
+    # Find contours of the largest labeled region
+    largest_region = np.argmax(np.bincount(label_image.flatten())[1:]) + 1
+    contour = measure.find_contours(label_image == largest_region, 0.5)[0]
+    
+    # Select points on the left side of the contour
+    left_x_threshold = np.min(contour[:, 1]) + 10  # Adjust threshold for left boundary
+    left_side = contour[(contour[:, 1] < left_x_threshold) & 
+                        (contour[:, 0] > np.min(contour[:, 0]) - 10) & 
+                        (contour[:, 0] < np.max(contour[:, 0]) + 10)]
+    
+    
+    # Fit a line to the left side points
+    x_left = left_side[:, 1]
+    y_left = left_side[:, 0]
+    
+    # Use linear regression to fit a line
+    slope, intercept, r_value, p_value, std_err = linregress(x_left, y_left)
+    
+    # Calculate the angle in degrees
+    angle_degrees = np.arctan(slope) * (180.0 / np.pi)
+    
+    ang2rotate = -np.sign(angle_degrees)*(90-np.abs(angle_degrees))
+    
+    return ang2rotate
+
+def isolate_carrier(image, threshold=0.31, max_object_size=500**2,
                     rotate=False):
 
     """Detect the black holder frame and crop to the central region."""
@@ -41,6 +67,14 @@ def isolate_carrier(image, threshold=0.31, max_object_size=500,
     
     # Remove small objects
     binary = morphology.remove_small_objects(binary, max_size=max_object_size)
+    binary = morphology.remove_small_holes(binary, max_size=512)
+    
+    if rotate:
+        tilt_deg  = get_tilt_angle(binary)
+        print(f"Tilt: {tilt_deg}")
+        
+        binary      = transform.rotate(binary, tilt_deg)
+        image_array = transform.rotate(image_array, tilt_deg)
     
     # Remove outside area anyway
     left   = np.where(binary.sum(axis=0) >0)[0][0]
@@ -50,49 +84,7 @@ def isolate_carrier(image, threshold=0.31, max_object_size=500,
     
     image_array = image_array[top:bottom,left:right]
     
-    if rotate:
-        _, tilt_rad, _ = find_carrier_tilt(image)
-        image_array = transform.rotate(image_array, np.rad2deg(tilt_rad))
-    
     return image_array
-
-
-
-def find_carrier_tilt(image, gaussian_sigma: float = 1.0, canny_sigma: float = 2.0,
-                  vertical_angle_tolerance: float = 10.0):
-
-
-    # --- 1. Pre-processing ---
-    image_gray = color.rgb2gray(image)
-    image_blurred = gaussian(image_gray, sigma=gaussian_sigma)
-
-    # --- 2. Edge Detection ---
-    edges = canny(image_blurred, sigma=canny_sigma, low_threshold=0.1, high_threshold=0.3)
-
-    # --- 3. Line Detection ---
-    h_space, h_angles, h_dists = hough_line(edges)
-    accum, angles, dists = hough_line_peaks(h_space, h_angles, h_dists, num_peaks=10)
-
-    # --- 4. Filter for the Left Edge ---
-    best_line = None
-    min_angle_abs = float('inf')
-
-    for angle, dist in zip(angles, dists):
-        angle_deg = np.rad2deg(angle)
-        # We are looking for an angle close to 0 (vertical)
-        if abs(angle_deg) < vertical_angle_tolerance:
-            if abs(angle) < min_angle_abs:
-                min_angle_abs = abs(angle)
-                best_line = (angle, dist)
-
-    if best_line is None:
-        return None
-
-    # --- 5. Extract and return results ---
-    final_angle_rad, final_dist = best_line
-    orientation_deg = np.rad2deg(final_angle_rad)
-
-    return orientation_deg, final_angle_rad, final_dist
 
 
 def find_horizontal_peaks(gray_image, bar_height=20, bar_width=2000, 
@@ -293,7 +285,7 @@ def carrier2samples(image, threshold=0.31, max_object_size=500, bar_height=20, b
         image_gray, bar_height=bar_height, bar_width=bar_width,
         peak_height=peak_height, peak_distance=peak_distance,
         middle_start=middle_start, middle_end=middle_end)
-
+    print(three_peaks)
     # Step 5: Find cross positions at each y-position
     cross_coordinates = find_cross_peaks_at_y(
         image_gray, three_peaks, cross_size=cross_size, cross_width=cross_width,
@@ -423,49 +415,3 @@ def visualize_segmentation(image, segments, grid_lines):
 
     plt.tight_layout()
     plt.show()
-
-def upload_segments_to_crucible(og_dataset, segments):
-    
-    client = tcrux.setup_crux_client()
-
-    
-    sample_positions = og_dataset["metadata"]["sample_positions"]
-    
-    for car_well, sample_uuid in sample_positions.items():
-        
-        sample_data = client.get_sample(sample_uuid)
-        
-        new_mfid = mfid.mfid()[0]
-        
-        new_dataset = {  
-        "unique_id"    : new_mfid,
-        "measurement"  : "sample well image TEST",
-        'project_id'   : '10k_perovskites',
-        "dataset_name" : f"sample well image | {sample_data["sample_name"] }",
-        }
-        
-        for field in ["owner_orcid", "instrument_name", "public", "creation_time"]:
-            new_dataset.update({field : og_dataset[field]})
-            
-        crux_dataset = BaseDataset(**new_dataset)
-    
-        scientific_metadata = {
-            "sample_positions" : car_well,
-            "carrier_image_dataset_id" : og_dataset["unique_id"],
-            }
-        
-        
-        image_file = f"tmp_images/{new_mfid}.jpeg"
-        image_array = (segments[car_well]["segment"]* 255).astype(np.uint8)
-        img = Image.fromarray(image_array)
-        img.save(image_file)
-        
-        # upload
-        client.create_new_dataset_from_files(crux_dataset,
-                                             scientific_metadata=scientific_metadata,
-                                             keywords=["lil image"],
-                                             files_to_upload=[image_file])
-        
-        client.add_dataset_to_sample(dataset_id = new_mfid, sample_id = sample_uuid)
-        
-        return

@@ -19,18 +19,21 @@ from tksamples.core import CruxObj
 class Measurement(CruxObj):
     
     def __init__(self, dataset=None, sample_name=None, sample_mfid=None,
-                 measurement_type=None, creation_time=None):
+                 measurement_type=None):
         
+        #make sure it's a copy
         dataset = dataset.copy()
         
         super().__init__(mfid=dataset["unique_id"],
+                         creation_time=dataset["creation_time"],
                          dtype="dataset",
-                         creation_time=dataset["creation_time"]
                          )
         
         self._sample_name  = sample_name
         self._sample_mfid  = sample_mfid
         self.measurement_type = measurement_type
+        
+        self.scientific_metadata = dataset.get("scientific_metadata")["scientific_metadata"]
         
         self._is_assigned = False
     

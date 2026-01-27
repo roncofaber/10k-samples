@@ -32,38 +32,54 @@ def number_to_well(n):
 
 def filter_links(links):
     """
-    If multiple links are provided, return the dict entry containing 'corrected'.
+    If multiple links are provided, return the dict entry containing 'corrected', ignoring any links with 'thumbnail' in the key.
     Otherwise, return the single link dict or string.
     Returns empty dict if no links found.
     """
+    
     if isinstance(links, str):
-        return links
+        return links  # Return the single string link directly
     
     if isinstance(links, dict):
         if len(links) == 0:
             return {}
         
         if len(links) == 1:
-            return links
+            return links  # Return the single link dict
         
-        # Multiple links - find the one with 'corrected' in the key
-        for key, url in links.items():
+        # Filter out links with 'thumbnail' in the key
+        filtered_links = {key: url for key, url in links.items() if 'thumbnail' not in key.lower()}
+        
+        if len(filtered_links) == 0:  # No valid links left
+            return {}
+        
+        # Look for the 'corrected' link
+        for key, url in filtered_links.items():
             if 'corrected' in key.lower():
-                return {key: url}
+                return {key: url}  # Immediately return if 'corrected' found
         
-        # Fallback to first entry
-        first_key = list(links.keys())[0]
-        return {first_key: links[first_key]}
+        # Fallback to the first valid entry
+        first_key = next(iter(filtered_links))  # Get the first key
+        return {first_key: filtered_links[first_key]}
     
-    # If it's a list
-    if len(links) == 0:
-        return []
+    if isinstance(links, list):
+        if len(links) == 0:
+            return []  # Return empty list
+        
+        # Filter out links containing 'thumbnail'
+        filtered_links = [link for link in links if 'thumbnail' not in link.lower()]
+        
+        if len(filtered_links) == 0:  # No valid links left
+            return []  # Return empty list if nothing remains
+        
+        if len(filtered_links) == 1:
+            return filtered_links[0]  # Return the single valid link
+        
+        # Search for a 'corrected' link
+        for link in filtered_links:
+            if 'corrected' in link.lower():
+                return link
+        
+        return filtered_links[0]  # Return the first valid link
     
-    if len(links) == 1:
-        return links[0]
-    
-    for link in links:
-        if 'corrected' in link.lower():
-            return link
-    
-    return links[0]
+    return {}  # Return empty dict for unsupported types

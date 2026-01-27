@@ -7,5 +7,6 @@ types including UV-Vis spectroscopy with support for data processing and analysi
 
 from .measurement import Measurement
 from .uvvis import NirvanaUVVis
+from .image import TFImage
 
-__all__ = ["Measurement", "NirvanaUVVis"]
+__all__ = ["Measurement", "NirvanaUVVis", "TFImage"]
