@@ -10,8 +10,6 @@ Created on Fri Jan 30 14:32:30 2026
 from tksamples import ThinFilms  # Import the ThinFilms class from the tksamples package
 import matplotlib.pyplot as plt
 
-
-
 #%%
 # Initialize the ThinFilms object
 # Use cache to avoid redundant downloads and set overwrite_cache to False

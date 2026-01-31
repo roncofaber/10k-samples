@@ -12,7 +12,8 @@ from tksamples import ThinFilms  # Import the ThinFilms class from the tksamples
 #%%
 # Initialize the ThinFilms object
 # Use cache to avoid redundant downloads and set overwrite_cache to False
-tfilms = ThinFilms(from_crucible=True, use_cache=True, overwrite_cache=False)
+tfilms = ThinFilms(use_cache=True, overwrite_cache=False, from_crucible=True,
+                   project_id="10k_perovskites", sample_type="thin film")
 
 #%%
 
@@ -21,3 +22,6 @@ tfilms.get_well_images()
 
 # Retrieve UV-Vis data for the thin films
 tfilms.get_uvvis_data()
+
+#%%
+
