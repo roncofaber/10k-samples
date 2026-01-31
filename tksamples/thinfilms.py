@@ -14,6 +14,7 @@ Created on Tue Jan 20 11:17:33 2026
 from tksamples.core import CruxObj
 from tksamples import ThinFilm
 from tksamples.crucible.converters import get_uvvis_measurement, get_image_measurement
+from tksamples.crucible.config import get_cache_dir
 
 # to not make ppl waiting
 from tqdm import tqdm
@@ -32,21 +33,28 @@ bad_datasets = set([
     ])
 
 class ThinFilms(CruxObj):
-    
-    def __init__(self, samples=None, from_crucible=True, cache_dir="10k_cache",
-                 use_cache=False, overwrite_cache=False):
-        
+
+    def __init__(self, samples=None, from_crucible=True, cache_dir=None,
+                 use_cache=False, overwrite_cache=False, project_id=None,
+                 sample_type=None):
+
         # this class really does not have mfid or creation time...
         super().__init__(mfid="", dtype="main", creation_time="1993-04-01T01:18:00.0000+01:00")
-        
+
         # store internal variables
         self._use_cache = use_cache
-        self._cache_dir = cache_dir
+        # Use configured cache directory if not specified
+        self._cache_dir = cache_dir if cache_dir is not None else str(get_cache_dir())
         self._overwrite = overwrite_cache
+        
+        # set up knowledge of project
+        self._project_id  = project_id
+        self._sample_type = sample_type
         
         # read samples from crucible
         if samples is None and from_crucible:
-            samples = self._get_samples_from_crucible()
+            samples = self._get_samples_from_crucible(project_id=project_id,
+                                                      sample_type=sample_type)
 
         # store samples
         self._samples = samples
@@ -56,24 +64,21 @@ class ThinFilms(CruxObj):
         
         return
     
-    def _get_samples_from_crucible(self):
+    def _get_samples_from_crucible(self, project_id=None, sample_type=None):
         
         # list all datasets
-        samples_datasets = self.client.list_samples(project_id="10k_perovskites",
-                                                    limit=999999)
-        
-        # filter out what is not a thin film
-        tf_datasets = []
-        for dataset in samples_datasets:
-            if dataset["sample_name"].startswith("TF"):
-                tf_datasets.append(dataset)
-        tf_datasets = sorted(tf_datasets, key=lambda x: x["sample_name"])
+        samples_datasets = self.client.list_samples(
+            project_id=project_id, sample_type=sample_type, limit=999999)
+        samples_datasets = sorted(samples_datasets, key=lambda x: x["sample_name"])
         
         # create a TF obj for each sample dataset
         samples = []
-        for dataset in tf_datasets:
-            tf = ThinFilm(**dataset)
-            samples.append(tf)
+        for dataset in samples_datasets:
+            try:
+                tf = ThinFilm(dataset)
+                samples.append(tf)
+            except:
+                print(f"Failed with dataset:\n\n {dataset}")
     
         return samples
     
@@ -90,8 +95,8 @@ class ThinFilms(CruxObj):
     def _get_project_datasets(self):
         
         # get all project datasets
-        all_datasets = self.client.list_datasets(project_id="10k_perovskites",
-                                                     limit=999999, include_metadata=True)
+        all_datasets = self.client.list_datasets(
+            project_id=self._project_id, limit=999999, include_metadata=True)
 
         return {dst["unique_id"]:dst for dst in all_datasets}
     

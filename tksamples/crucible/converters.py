@@ -44,7 +44,7 @@ def get_image_measurement(client, dataset, output_dir=".", use_cache=False,
     image_extensions = ['.jpeg', '.jpg', '.png', '.gif', '.bmp', '.tiff', '.tif',
                         '.svg', '.webp', '.heif', '.heic']
     dataset_id = dataset["unique_id"]
-    filename = f"{dataset_id}.jpg"
+    filename = f"{dataset_id}.png"
 
     imgfile = get_data_from_crux(client, dataset_id, image_extensions,
                                 output_dir=output_dir, fname=filename,

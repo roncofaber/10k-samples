@@ -13,11 +13,12 @@ Loads Crucible API keys and configuration from:
 import os
 import configparser
 from pathlib import Path
-from platformdirs import user_config_dir
+from platformdirs import user_config_dir, user_cache_dir
 
 # Global variable to store loaded config
 _config_loaded = False
 _crucible_api_key = None
+_cache_dir = None
 
 
 def get_crucible_api_key():
@@ -55,15 +56,43 @@ def get_crucible_api_key():
     return _crucible_api_key
 
 
+def get_cache_dir():
+    """
+    Get the cache directory for storing downloaded data.
+
+    Priority order:
+    1. TKSAMPLES_CACHE_DIR environment variable
+    2. cache_dir from ~/.config/tksamples/config.ini
+    3. Default: ~/.cache/tksamples/ (platform-specific)
+
+    Returns:
+        Path: The cache directory path
+    """
+    global _config_loaded, _cache_dir
+
+    if not _config_loaded:
+        _load_config()
+
+    if _cache_dir is None:
+        # Use default platform-specific cache directory
+        cache_path = Path(user_cache_dir("tksamples"))
+    else:
+        # Expand ~ and convert to Path, handling both strings and Path objects
+        cache_path = Path(os.path.expanduser(str(_cache_dir)))
+
+    # Ensure the cache directory exists
+    cache_path.mkdir(parents=True, exist_ok=True)
+
+    return cache_path
+
+
 def _load_config():
     """Load configuration from all available sources."""
-    global _config_loaded, _crucible_api_key
+    global _config_loaded, _crucible_api_key, _cache_dir
 
-    # 1. Try environment variable first (highest priority)
+    # 1. Try environment variables first (highest priority)
     _crucible_api_key = os.environ.get("CRUCIBLE_API_KEY")
-    if _crucible_api_key:
-        _config_loaded = True
-        return
+    _cache_dir = os.environ.get("TKSAMPLES_CACHE_DIR")
 
     # 2. Try INI config file in user config directory
     config_dir = Path(user_config_dir("tksamples"))
@@ -73,18 +102,25 @@ def _load_config():
         config = configparser.ConfigParser()
         config.read(config_file)
 
-        if "crucible" in config and "api_key" in config["crucible"]:
-            _crucible_api_key = config["crucible"]["api_key"].strip('"').strip("'")
+        # Load API key if not already set from environment
+        if "crucible" in config:
+            if _crucible_api_key is None and "api_key" in config["crucible"]:
+                _crucible_api_key = config["crucible"]["api_key"].strip('"').strip("'")
+
+            if _cache_dir is None and "cache_dir" in config["crucible"]:
+                _cache_dir = config["crucible"]["cache_dir"].strip('"').strip("'")
 
     _config_loaded = True
 
 
-def create_config_file(api_key):
+def create_config_file(api_key, cache_dir=None):
     """
-    Create a configuration file with the given API key.
+    Create a configuration file with the given API key and optional cache directory.
 
     Args:
         api_key (str): The API key to store
+        cache_dir (str, optional): Custom cache directory path. If not provided,
+                                   defaults to platform-specific cache directory
 
     Returns:
         Path: Path to the created config file
@@ -94,12 +130,20 @@ def create_config_file(api_key):
     config_file = config_dir / "config.ini"
 
     config = configparser.ConfigParser()
+
+    # Set up crucible section with API key
     config["crucible"] = {"api_key": api_key}
+
+    # Add cache_dir if provided
+    if cache_dir is not None:
+        config["crucible"]["cache_dir"] = str(cache_dir)
 
     with open(config_file, 'w') as f:
         config.write(f)
 
     print(f"Created config file: {config_file}")
+    if cache_dir:
+        print(f"Cache directory: {cache_dir}")
     return config_file
 
 

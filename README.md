@@ -11,6 +11,49 @@ cd 10k-samples
 pip install -e .
 ```
 
+## Configuration
+
+### Setting up Crucible API Access
+
+The package requires a Crucible API key. You can configure it in two ways:
+
+1. **Environment variable** (recommended for temporary use):
+```bash
+export CRUCIBLE_API_KEY='your_api_key_here'
+```
+
+2. **Config file** (recommended for persistent configuration):
+```python
+from tksamples.crucible.config import create_config_file
+create_config_file('your_api_key_here')
+```
+
+This creates a config file at `~/.config/tksamples/config.ini` on Linux/macOS or `%APPDATA%\tksamples\config.ini` on Windows.
+
+### Cache Directory Configuration
+
+By default, cached data is stored in the platform-specific cache directory (`~/.cache/tksamples/` on Linux, `~/Library/Caches/tksamples/` on macOS, `%LOCALAPPDATA%\tksamples\` on Windows).
+
+You can customize the cache location:
+
+1. **Environment variable**:
+```bash
+export TKSAMPLES_CACHE_DIR='/path/to/your/cache'
+```
+
+2. **Config file**: Add to your `~/.config/tksamples/config.ini`:
+```ini
+[crucible]
+api_key = your_api_key_here
+cache_dir = /path/to/your/cache
+```
+
+3. **Programmatically**:
+```python
+from tksamples.crucible.config import create_config_file
+create_config_file('your_api_key_here', cache_dir='/path/to/your/cache')
+```
+
 ## Quick Start
 
 ### Working with Crucible Database

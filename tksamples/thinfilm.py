@@ -17,26 +17,40 @@ from tksamples.core import CruxObj
 
 class ThinFilm(CruxObj):
     
-    def __init__(self, unique_id=None, sample_name=None, datasets=None,
-                 description=None, date_created=None, measurements=None,
-                 **kwargs):
+    def __init__(self, dataset, measurements=None, **kwargs):
         
-        super().__init__(mfid=unique_id, dtype="sample", creation_time=date_created)
-
-        # setup thin film data
-        self.sample_name  = sample_name
-        self.datasets     = datasets if datasets is not None else []
-
-        # initialize measurements storage
-        self._measurements = measurements if measurements is not None else {}
+        # store dataset information of the sample
+        self._dataset = dataset.copy()
         
+        # Pass crucible core infro to parent class
+        mfid = self._dataset["unique_id"]
+        time = self._dataset["date_created"]
+        super().__init__(mfid=mfid, dtype="sample", creation_time=time)
+
         # Set to track measurement types
+        self._measurements = {}
         self._measurement_types = set()
-        
+        if measurements is not None:
+            for measurement in measurements.copy():
+                self.add_measurement(measurement)
+             
+        # Makes easier to access uvvis and image, #TODO change
         self.uvvis = None
         self.image = None
 
         return
+    
+    @property
+    def sample_name(self):
+        return self._dataset["sample_name"]
+    
+    @property
+    def sample_type(self):
+        return self._dataset["sample_type"]
+    
+    @property
+    def description(self):
+        return self._dataset["description"]
     
     def add_measurement(self, new_measurement):
         """Add a measurement to thin film."""
@@ -64,6 +78,14 @@ class ThinFilm(CruxObj):
     @property
     def measurements(self):
         return list(self._measurements.values())
+    
+    @property
+    def dataset(self):
+        return self._dataset
+    
+    @property
+    def datasets(self):
+        return self._dataset["datasets"]
         
     def __repr__(self): #make it pretty
         return f"{self.__class__.__name__}({self.sample_name})"
@@ -74,6 +96,6 @@ class ThinFilm(CruxObj):
             print("No image associated with this TF.")
             return
         
-        self.image.view()
+        self.image.image.show()
 
         
