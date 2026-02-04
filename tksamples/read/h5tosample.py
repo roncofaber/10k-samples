@@ -153,7 +153,7 @@ def h5_to_samples_old(dataset, h5filename, erange=None):
             tray_well = number_to_well(int(poskey.split("_")[1])-2)
             
             if "sample_name" not in sample_attrs:
-                sample_attrs["sample_name"] = poskey.split("_")[2]
+                sample_attrs["sample_name"] = "TF" + poskey.split("_")[2][2:].zfill(6)
             if "sample_uuid" not in sample_attrs:
                 sample_attrs["sample_uuid"] = None
             if "integration_time" not in sample_attrs:

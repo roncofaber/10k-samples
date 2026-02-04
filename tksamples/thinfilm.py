@@ -49,6 +49,10 @@ class ThinFilm(CruxObj):
         return self._dataset["sample_type"]
     
     @property
+    def idx(self):
+        return int(self.sample_name[2:])
+    
+    @property
     def description(self):
         return self._dataset["description"]
     

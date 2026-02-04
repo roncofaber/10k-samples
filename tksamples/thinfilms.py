@@ -35,7 +35,7 @@ bad_datasets = set([
 class ThinFilms(CruxObj):
 
     def __init__(self, samples=None, from_crucible=True, cache_dir=None,
-                 use_cache=False, overwrite_cache=False, project_id=None,
+                 use_cache=True, overwrite_cache=False, project_id=None,
                  sample_type=None):
 
         # this class really does not have mfid or creation time...
@@ -86,6 +86,7 @@ class ThinFilms(CruxObj):
         
         # define sample map
         self._sample_map = {sample.unique_id: sample for sample in self._samples}
+        self._sample_map_name = {sample.sample_name: sample for sample in self._samples}
         
         # define dataset map
         self._dataset_map = self._get_project_datasets()
@@ -131,7 +132,9 @@ class ThinFilms(CruxObj):
                 uvvis_data.extend(data)
                 
         for uvvis in uvvis_data:
-            sample = self.get_sample(uvvis.sample_mfid)
+            
+            sample = self.get_sample(sample_id=uvvis.sample_mfid,
+                                     sample_name=uvvis.sample_name)
             
             if sample is not None:
                 sample.add_measurement(uvvis)
@@ -153,7 +156,8 @@ class ThinFilms(CruxObj):
                 well_images.append(data)
                 
         for image in well_images:
-            sample = self.get_sample(image.sample_mfid)
+            sample = self.get_sample(sample_id=image.sample_mfid,
+                                     sample_name=image.sample_name)
             
             if sample is not None:
                 sample.add_measurement(image)
@@ -180,6 +184,15 @@ class ThinFilms(CruxObj):
         
         return unique_datasets
 
+    def get_measurements(self, mtype):
+        
+        measurements = []
+        for tf in self:
+            for measurement in tf.measurements:
+                if measurement.mtype == mtype:
+                    measurements.append(measurement)
+                    
+        return measurements
     
     @property
     def samples(self):
@@ -193,10 +206,17 @@ class ThinFilms(CruxObj):
     def __len__(self):
         return len(self.samples)
     
-    def get_sample(self, sample_id):
+    def get_sample(self, sample_id=None, sample_name=None):
         """Get sample by its identifier."""
-        return self._sample_map.get(sample_id)
-
+        
+        if sample_id is not None:
+            return self._sample_map.get(sample_id)
+        elif sample_name is not None:
+            return self._sample_map_name.get(sample_name)
+        else:
+            print("upsi")
+            return
+        
     def __getitem__(self, index):
         if isinstance(index, str):  # ID lookup
             sample = self._sample_map.get(index)
