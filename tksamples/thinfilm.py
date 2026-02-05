@@ -10,8 +10,13 @@ Created on Wed Jan  7 17:53:17 2026
 @author: roncofaber
 """
 
+import logging
+
 # internal modules
 from tksamples.core import CruxObj
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 #%%
 
@@ -95,11 +100,11 @@ class ThinFilm(CruxObj):
         return f"{self.__class__.__name__}({self.sample_name})"
     
     def view(self):
-        
+
         if self.image is None:
-            print("No image associated with this TF.")
+            logger.info(f"No image associated with {self.sample_name}")
             return
-        
+
         self.image.image.show()
 
         

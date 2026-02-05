@@ -14,6 +14,7 @@ Created on Tue Jan 13 14:40:26 2026
 # os and stuff
 import re
 import os
+import logging
 
 # internal packages
 from .config import get_crucible_api_key
@@ -27,6 +28,9 @@ from PIL import Image
 from io import BytesIO
 import requests
 from typing import Optional
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 #%%
 
@@ -60,21 +64,25 @@ def get_data_from_crux(client, dataset_id, extension, output_dir=".", fname=None
     
     # Perform the HTTP GET request
     try:
-        
+
         response = requests.get(download_link, stream=True, timeout=30)
         response.raise_for_status()
 
         # Create a BytesIO stream to hold the downloaded content
         response_content = BytesIO()
 
-        # If caching is enabled, create the directory and save the response content
+        # If caching is enabled, create the directory and save to both file and BytesIO
         if use_cache and download_path:
             os.makedirs(os.path.dirname(download_path), exist_ok=True)
             with open(download_path, 'wb') as f:
-                # Stream the content to the file and also write to the BytesIO
+                # Stream the content to both the file and BytesIO
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
                     response_content.write(chunk)
+        else:
+            # If not caching, only write to BytesIO
+            for chunk in response.iter_content(chunk_size=8192):
+                response_content.write(chunk)
 
         # Ensure the BytesIO stream pointer is at the beginning
         response_content.seek(0)
@@ -83,7 +91,8 @@ def get_data_from_crux(client, dataset_id, extension, output_dir=".", fname=None
         return response_content
 
     except requests.RequestException as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"Failed to download data from dataset {dataset_id}: {e}")
+        logger.debug(f"Download URL: {download_link}")
         return None
         
         

@@ -6,12 +6,17 @@ Created on Mon Jan 26 10:44:31 2026
 @author: roncofaber
 """
 
+import logging
+
 # image stuff
 from PIL import Image
 import matplotlib.pyplot as plt
 
 # internal modules
 from tksamples.measurements.measurement import Measurement
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 #%%
 
@@ -49,6 +54,6 @@ class TFImage(Measurement):
                 plt.show()  # Show the plot inline
             else:
                 plt.show(block=True)  # Open a separate window
-                
+
         else:
-            print("No image to display.")
+            logger.info("No image to display")

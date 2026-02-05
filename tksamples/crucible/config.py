@@ -11,9 +11,13 @@ Loads Crucible API keys and configuration from:
 """
 
 import os
+import logging
 import configparser
 from pathlib import Path
 from platformdirs import user_config_dir, user_cache_dir
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 # Global variable to store loaded config
 _config_loaded = False
@@ -141,9 +145,9 @@ def create_config_file(api_key, cache_dir=None):
     with open(config_file, 'w') as f:
         config.write(f)
 
-    print(f"Created config file: {config_file}")
+    logger.info(f"Created config file: {config_file}")
     if cache_dir:
-        print(f"Cache directory: {cache_dir}")
+        logger.debug(f"Cache directory: {cache_dir}")
     return config_file
 
 

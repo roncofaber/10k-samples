@@ -10,6 +10,8 @@ Created on Tue Jan 20 11:17:33 2026
 @author: roncofaber
 """
 
+import logging
+
 # internal modules
 from tksamples.core import CruxObj
 from tksamples import ThinFilm
@@ -18,6 +20,9 @@ from tksamples.crucible.config import get_cache_dir
 
 # to not make ppl waiting
 from tqdm import tqdm
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 #%%
 
@@ -77,20 +82,21 @@ class ThinFilms(CruxObj):
             try:
                 tf = ThinFilm(dataset)
                 samples.append(tf)
-            except:
-                print(f"Failed with dataset:\n\n {dataset}")
+            except Exception as e:
+                logger.error(f"Failed to create ThinFilm from dataset: {e}")
+                logger.debug(f"Dataset details:\n\t- name: {dataset.get('dataset_name', 'unknown')}\n\t- id: {dataset.get('unique_id', 'unknown')}")
     
         return samples
     
     def _setup_mapping(self):
-        
-        # define sample map
-        self._sample_map = {sample.unique_id: sample for sample in self._samples}
-        self._sample_map_name = {sample.sample_name: sample for sample in self._samples}
-        
+
+        # define sample maps for fast lookups
+        self._samples_by_id = {sample.unique_id: sample for sample in self._samples}
+        self._samples_by_name = {sample.sample_name: sample for sample in self._samples}
+
         # define dataset map
         self._dataset_map = self._get_project_datasets()
-        
+
         return
     
     def _get_project_datasets(self):
@@ -117,51 +123,59 @@ class ThinFilms(CruxObj):
         
         return measurement_datasets
     
-    def get_uvvis_data(self):
-        
-        uvvis_datasets = self.get_measurments_datasets_of_type(
-            mtype="pollux_oospec_multipos_line_scan")
-        
-        uvvis_data = []
-        for dataset in tqdm(uvvis_datasets, desc="Getting UV-Vis", unit="dts", leave=False):
+    def _get_measurement_data(self, measurement_type, converter_func, description):
+        """
+        Generic method to retrieve and associate measurements from Crucible.
 
-            data = get_uvvis_measurement(self.client, dataset, output_dir=self._cache_dir,
-                                         use_cache=self._use_cache,
-                                         overwrite_existing=self._overwrite)
+        Args:
+            measurement_type: The measurement type string for filtering datasets
+            converter_func: Function to convert dataset to measurement object(s)
+            description: Description for the progress bar
+        """
+        # Get datasets of the specified type
+        datasets = self.get_measurments_datasets_of_type(mtype=measurement_type)
+
+        # Collect measurements from all datasets
+        measurements = []
+        for dataset in tqdm(datasets, desc=description, unit="dts", leave=False):
+            data = converter_func(self.client, dataset, output_dir=self._cache_dir,
+                                 use_cache=self._use_cache,
+                                 overwrite_existing=self._overwrite)
             if data is not None:
-                uvvis_data.extend(data)
-                
-        for uvvis in uvvis_data:
-            
-            sample = self.get_sample(sample_id=uvvis.sample_mfid,
-                                     sample_name=uvvis.sample_name)
-            
+                # Handle both single measurements and lists of measurements
+                if isinstance(data, list):
+                    measurements.extend(data)
+                else:
+                    measurements.append(data)
+
+        # Associate measurements with their samples
+        for measurement in measurements:
+            sample = self.get_sample(sample_id=measurement.sample_mfid,
+                                    sample_name=measurement.sample_name)
             if sample is not None:
-                sample.add_measurement(uvvis)
-            
+                sample.add_measurement(measurement)
+            else:
+                logger.warning(f"Cannot assign measurement to sample - sample not found")
+                logger.debug(f"Measurement details - mfid: {measurement.sample_mfid}, name: {measurement.sample_name}, type: {measurement.mtype}")
+
         return
-    
-    def get_well_images(self):
-        
-        well_datasets = self.get_measurments_datasets_of_type(
-            mtype="sample well image")
-        
-        well_images = []
-        for dataset in tqdm(well_datasets, desc="Getting images", unit="dts", leave=False):
 
-            data = get_image_measurement(self.client, dataset, output_dir=self._cache_dir,
-                                         use_cache=self._use_cache,
-                                         overwrite_existing=self._overwrite)
-            if data is not None:
-                well_images.append(data)
-                
-        for image in well_images:
-            sample = self.get_sample(sample_id=image.sample_mfid,
-                                     sample_name=image.sample_name)
-            
-            if sample is not None:
-                sample.add_measurement(image)
-                
+    def get_uvvis_data(self):
+        """Retrieve and associate UV-Vis spectroscopy measurements."""
+        self._get_measurement_data(
+            measurement_type="pollux_oospec_multipos_line_scan",
+            converter_func=get_uvvis_measurement,
+            description="Getting UV-Vis"
+        )
+        return
+
+    def get_well_images(self):
+        """Retrieve and associate sample well images."""
+        self._get_measurement_data(
+            measurement_type="sample well image",
+            converter_func=get_image_measurement,
+            description="Getting images"
+        )
         return
     
     # return all datasets of samples in object
@@ -208,30 +222,34 @@ class ThinFilms(CruxObj):
     
     def get_sample(self, sample_id=None, sample_name=None):
         """Get sample by its identifier."""
-        
+
         if sample_id is not None:
-            return self._sample_map.get(sample_id)
+            return self._samples_by_id.get(sample_id)
         elif sample_name is not None:
-            return self._sample_map_name.get(sample_name)
+            return self._samples_by_name.get(sample_name)
         else:
-            print("upsi")
+            logger.warning("get_sample called without sample_id or sample_name")
             return
         
     def __getitem__(self, index):
-        if isinstance(index, str):  # ID lookup
-            sample = self._sample_map.get(index)
+        if isinstance(index, str):  # String lookup: try ID first, then name
+            sample = self._samples_by_id.get(index)
             if sample is None:
-                raise KeyError(f"Sample with ID '{index}' not found.")
+                sample = self._samples_by_name.get(index)
+            if sample is None:
+                raise KeyError(f"Sample with ID or name '{index}' not found.")
             return sample
-            
+
         elif isinstance(index, slice):  # Slice
             sliced_samples = self.samples[index]
-            return ThinFilms(samples=sliced_samples, from_crucible=False, 
-                             cache_dir=self._cache_dir, use_cache=self._use_cache)
-        
+            return ThinFilms(samples=sliced_samples, from_crucible=False,
+                             cache_dir=self._cache_dir, use_cache=self._use_cache,
+                             overwrite_cache=self._overwrite, project_id=self._project_id,
+                             sample_type=self._sample_type)
+
         elif isinstance(index, int):  # Integer index
             return self.samples[index]
-    
+
         else:
             raise TypeError("Index must be either a string, slice, or an integer.")
 
