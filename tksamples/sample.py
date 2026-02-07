@@ -121,13 +121,75 @@ class Sample(CruxObj):
 
     @property
     def parents(self):
-        """Get list of parent samples."""
+        """Get list of direct parent samples."""
         return self._parents
 
     @property
     def children(self):
-        """Get list of child samples."""
+        """Get list of direct child samples."""
         return self._children
+
+    def get_all_ancestors(self):
+        """
+        Get all ancestor samples by traversing parent relationships.
+
+        Recursively traverses parent links to find all ancestors
+        (parents, grandparents, etc.).
+
+        Returns
+        -------
+        list of Sample
+            List of all ancestor samples
+
+        Examples
+        --------
+        >>> sample = project["TF0001"]
+        >>> ancestors = sample.get_all_ancestors()
+        >>> print(f"Found {len(ancestors)} ancestors")
+        """
+        ancestors = []
+        visited = set()
+        queue = list(self._parents)
+
+        while queue:
+            current = queue.pop(0)
+            if id(current) not in visited:
+                visited.add(id(current))
+                ancestors.append(current)
+                queue.extend(current.parents)
+
+        return ancestors
+
+    def get_all_descendants(self):
+        """
+        Get all descendant samples by traversing child relationships.
+
+        Recursively traverses child links to find all descendants
+        (children, grandchildren, etc.).
+
+        Returns
+        -------
+        list of Sample
+            List of all descendant samples
+
+        Examples
+        --------
+        >>> solution = project["SOL0001"]
+        >>> descendants = solution.get_all_descendants()
+        >>> print(f"Solution produced {len(descendants)} descendants")
+        """
+        descendants = []
+        visited = set()
+        queue = list(self._children)
+
+        while queue:
+            current = queue.pop(0)
+            if id(current) not in visited:
+                visited.add(id(current))
+                descendants.append(current)
+                queue.extend(current.children)
+
+        return descendants
 
     @property
     def dataset(self):

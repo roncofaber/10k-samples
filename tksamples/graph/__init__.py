@@ -14,6 +14,21 @@ from .graph import (
     build_project_graph,
 )
 
+from .visualization import (
+    plot_direct_neighbors,
+    plot_ancestors,
+    plot_descendants,
+    plot_connected_component,
+    plot_extended_family,
+    plot_full_graph,
+)
+
 __all__ = [
     "build_project_graph",
+    "plot_direct_neighbors",
+    "plot_ancestors",
+    "plot_descendants",
+    "plot_connected_component",
+    "plot_extended_family",
+    "plot_full_graph",
 ]

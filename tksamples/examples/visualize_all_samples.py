@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jan 30 14:32:30 2026
+Sample Grid Visualization Example
 
+Demonstrates how to create a grid visualization of all sample well images.
+
+Created on Fri Jan 30 14:32:30 2026
 @author: roncofaber
 """
 

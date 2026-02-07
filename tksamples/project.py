@@ -18,7 +18,8 @@ from tksamples.graph.graph import build_project_graph
 import logging
 logger = logging.getLogger(__name__)
 
-# networking
+# graph operations
+import networkx as nx
 
 #%%
 
@@ -174,3 +175,191 @@ class CrucibleProject(SampleCollection):
     def sample_types(self):
         """Get list of all unique sample types in the project."""
         return list(self._samples_by_type.keys())
+
+    # Graph-based genealogy queries
+
+    def get_ancestors(self, sample):
+        """
+        Get all ancestor samples using the project graph.
+
+        Uses networkx to efficiently find all ancestors in the genealogy graph.
+
+        Parameters
+        ----------
+        sample : Sample or str
+            Sample object or sample unique_id/name
+
+        Returns
+        -------
+        list of Sample
+            List of all ancestor Sample objects
+
+        Examples
+        --------
+        >>> project = CrucibleProject("10k_perovskites")
+        >>> sample = project["TF0001"]
+        >>> ancestors = project.get_ancestors(sample)
+        """
+        # Get Sample object if string was passed
+        if isinstance(sample, str):
+            sample = self.get_sample(sample_id=sample, sample_name=sample)
+            if sample is None:
+                logger.warning(f"Sample '{sample}' not found")
+                return []
+
+        if sample not in self._graph:
+            logger.debug(f"Sample {sample.sample_name} not in genealogy graph")
+            return []
+
+        ancestor_samples = nx.ancestors(self._graph, sample)
+        return list(ancestor_samples)
+
+    def get_descendants(self, sample):
+        """
+        Get all descendant samples using the project graph.
+
+        Uses networkx to efficiently find all descendants in the genealogy graph.
+
+        Parameters
+        ----------
+        sample : Sample or str
+            Sample object or sample unique_id/name
+
+        Returns
+        -------
+        list of Sample
+            List of all descendant Sample objects
+
+        Examples
+        --------
+        >>> project = CrucibleProject("10k_perovskites")
+        >>> solution = project["SOL0001"]
+        >>> descendants = project.get_descendants(solution)
+        """
+        # Get Sample object if string was passed
+        if isinstance(sample, str):
+            sample = self.get_sample(sample_id=sample, sample_name=sample)
+            if sample is None:
+                logger.warning(f"Sample '{sample}' not found")
+                return []
+
+        if sample not in self._graph:
+            logger.debug(f"Sample {sample.sample_name} not in genealogy graph")
+            return []
+
+        descendant_samples = nx.descendants(self._graph, sample)
+        return list(descendant_samples)
+
+    def get_common_ancestors(self, sample1, sample2):
+        """
+        Find common ancestors of two samples.
+
+        Parameters
+        ----------
+        sample1 : Sample or str
+            First sample object or unique_id/name
+        sample2 : Sample or str
+            Second sample object or unique_id/name
+
+        Returns
+        -------
+        list of Sample
+            List of Sample objects that are ancestors of both samples
+
+        Examples
+        --------
+        >>> project = CrucibleProject("10k_perovskites")
+        >>> tf1 = project["TF0001"]
+        >>> tf2 = project["TF0002"]
+        >>> common = project.get_common_ancestors(tf1, tf2)
+        """
+        # Get Sample objects if strings were passed
+        if isinstance(sample1, str):
+            sample1 = self.get_sample(sample_id=sample1, sample_name=sample1)
+            if sample1 is None:
+                logger.warning(f"Sample '{sample1}' not found")
+                return []
+
+        if isinstance(sample2, str):
+            sample2 = self.get_sample(sample_id=sample2, sample_name=sample2)
+            if sample2 is None:
+                logger.warning(f"Sample '{sample2}' not found")
+                return []
+
+        if sample1 not in self._graph or sample2 not in self._graph:
+            logger.debug(f"One or both samples not in genealogy graph")
+            return []
+
+        ancestors1 = nx.ancestors(self._graph, sample1)
+        ancestors2 = nx.ancestors(self._graph, sample2)
+        common_samples = ancestors1.intersection(ancestors2)
+
+        return list(common_samples)
+
+    def get_siblings(self, sample):
+        """
+        Get sibling samples (samples sharing at least one parent).
+
+        Parameters
+        ----------
+        sample : Sample or str
+            Sample object or unique_id/name
+
+        Returns
+        -------
+        list of Sample
+            List of sibling Sample objects
+
+        Examples
+        --------
+        >>> project = CrucibleProject("10k_perovskites")
+        >>> sample = project["TF0001"]
+        >>> siblings = project.get_siblings(sample)
+        """
+        # Get Sample object if string was passed
+        if isinstance(sample, str):
+            sample = self.get_sample(sample_id=sample, sample_name=sample)
+            if sample is None:
+                logger.warning(f"Sample '{sample}' not found")
+                return []
+
+        if sample not in self._graph:
+            logger.debug(f"Sample {sample.sample_name} not in genealogy graph")
+            return []
+
+        # Get all parents
+        parents = list(self._graph.predecessors(sample))
+
+        # Get all children of those parents
+        siblings = set()
+        for parent in parents:
+            siblings.update(self._graph.successors(parent))
+
+        # Remove the sample itself
+        siblings.discard(sample)
+
+        return list(siblings)
+
+    def get_samples_with_ancestor(self, ancestor):
+        """
+        Get all samples that have the specified sample as an ancestor.
+
+        This is equivalent to getting all descendants.
+
+        Parameters
+        ----------
+        ancestor : Sample or str
+            Ancestor sample object or unique_id
+
+        Returns
+        -------
+        list of Sample
+            List of all samples descended from the ancestor
+
+        Examples
+        --------
+        >>> project = CrucibleProject("10k_perovskites")
+        >>> solution = project["SOL0001"]
+        >>> all_from_solution = project.get_samples_with_ancestor(solution)
+        """
+        return self.get_descendants(ancestor)
