@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ThinFilm: Individual Thin Film Sample Management
+Sample: Individual Thin Film Sample Management
 
 Class representing individual thin film samples with measurement storage,
 QR code generation, and Crucible integration for metadata and analysis.
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 #%%
 
-class ThinFilm(CruxObj):
+class Sample(CruxObj):
     
     def __init__(self, dataset, measurements=None, **kwargs):
         
@@ -34,14 +34,14 @@ class ThinFilm(CruxObj):
 
         # Set to track measurement types
         self._measurements = {}
-        self._measurement_types = set()
+        self._mtypes       = {}
         if measurements is not None:
             for measurement in measurements.copy():
                 self.add_measurement(measurement)
-             
-        # Makes easier to access uvvis and image, #TODO change
-        self.uvvis = None
-        self.image = None
+
+        # Initialize parent/child relationships for genealogy tracking
+        self._parents = []
+        self._children = []
 
         return
     
@@ -64,17 +64,12 @@ class ThinFilm(CruxObj):
     def add_measurement(self, new_measurement):
         """Add a measurement to thin film."""
         
+        # assign measurement
         new_measurement._assign_to_sample(self)
         
-        self._measurements[new_measurement.mfid] = new_measurement
-        
-        # Add the measurement type to the set
-        self._measurement_types.add(new_measurement.mtype)  # Assuming new_measurement has a 'mtype' attribute.
-        
-        if new_measurement.mtype == "uvvis":
-            self.uvvis = new_measurement
-        elif new_measurement.mtype == "image":
-            self.image = new_measurement
+        # add to data structure
+        self._measurements[new_measurement.mtype] = new_measurement
+        self._mtypes[new_measurement.mtype] = new_measurement
         
         return
 
@@ -87,7 +82,53 @@ class ThinFilm(CruxObj):
     @property
     def measurements(self):
         return list(self._measurements.values())
-    
+
+    def add_parent(self, parent_sample, _skip_reciprocal=False):
+        """
+        Add a parent sample to this sample's genealogy (bidirectional).
+
+        Automatically adds this sample as a child to the parent.
+
+        Parameters
+        ----------
+        parent_sample : Sample
+            The parent sample object (e.g., a precursor solution)
+        """
+        if parent_sample not in self._parents:
+            self._parents.append(parent_sample)
+            
+            if not _skip_reciprocal:
+                parent_sample.add_child(self, _skip_reciprocal=True)
+        return
+
+    def add_child(self, child_sample, _skip_reciprocal=False):
+        """
+        Add a child sample to this sample's genealogy (bidirectional).
+
+        Automatically adds this sample as a parent to the child.
+
+        Parameters
+        ----------
+        child_sample : Sample
+            The child sample object (e.g., a thin film derived from this sample)
+        """
+        if child_sample not in self._children:
+            self._children.append(child_sample)
+
+            if not _skip_reciprocal:
+                child_sample.add_parent(self, _skip_reciprocal=True)
+        return
+
+    @property
+    def parents(self):
+        """Get list of parent samples."""
+        return self._parents
+
+    @property
+    def children(self):
+        """Get list of child samples."""
+        return self._children
+
     @property
     def dataset(self):
         return self._dataset
@@ -98,6 +139,12 @@ class ThinFilm(CruxObj):
         
     def __repr__(self): #make it pretty
         return f"{self.__class__.__name__}({self.sample_name})"
+    
+    def __getattr__(self, key):
+        # This is called when an attribute isn't found normally
+        if key in self._mtypes:
+            return self._mtypes[key]
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{key}'")
     
     def view(self):
 

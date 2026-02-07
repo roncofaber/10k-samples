@@ -11,11 +11,13 @@ Created on Fri Jan 16 18:22:21 2026
 @author: roncofaber
 """
 
-# warn us
-import warnings
+import logging
 
 # internal modules
 from tksamples.core import CruxObj
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 #%%
 
@@ -43,16 +45,17 @@ class Measurement(CruxObj):
         return
     
     def _assign_to_sample(self, sample):
-        
+
         if self.sample_mfid != sample.mfid:
-            warnings.warn(f"Measurement MFID {self.sample_mfid}"
-                          f" does not match sample MFID {sample.mfid}")
+            logger.warning(f"Measurement MFID mismatch - expected {sample.mfid}")
+            logger.debug(f"Measurement MFID: {self.sample_mfid}, Sample MFID: {sample.mfid}")
         if self._is_assigned:
-            warnings.warn(f"Measurement is already assigned to {self.sample}")
-                
+            logger.warning(f"Measurement is already assigned to sample {self.sample.sample_name}")
+            logger.debug(f"Attempting to reassign to {sample.sample_name}")
+
         self.sample = sample
         self._is_assigned = True
-        
+
         return
     
     @property

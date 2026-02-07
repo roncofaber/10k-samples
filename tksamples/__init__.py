@@ -12,18 +12,23 @@ import logging
 from .crucible import get_crucible_api_key, create_config_file, get_config_file_path
 
 # Core classes
-from .thinfilm import ThinFilm
-from .thinfilms import ThinFilms
+from .sample import Sample
+from .collection import SampleCollection
+from .samples import Samples
 
 # Data reading and measurements
 from .measurements import Measurement, NirvanaUVVis, TFImage
+
+# Genealogy module (import as submodule)
+from . import graph
 
 __version__ = "0.1.2"
 __author__ = "roncofaber"
 
 __all__ = [
-    "ThinFilm",
-    "ThinFilms",
+    "Sample",
+    "SampleCollection",
+    "Samples",
     "Measurement",
     "NirvanaUVVis",
     "TFImage",

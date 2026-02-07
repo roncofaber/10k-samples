@@ -38,6 +38,7 @@ dependencies = [
     "requests>=2.28.0",
     "platformdirs>=2.5.0",
     "scikit-image>=0.19.0",
+    "networkx>=2.8.0",
     "pycrucible @ git+https://github.com/MolecularFoundryCrucible/pycrucible.git"
 ]
 
@@ -54,7 +55,7 @@ packages = [
     "tksamples.measurements",
     "tksamples.utils",
     "tksamples.crucible",
-    "tksamples.image",
+    "tksamples.genealogy",
     "tksamples.examples"
 ]
 
