@@ -4,7 +4,7 @@
 Thin Film Parser: Crucible Sample Retrieval
 
 Retrieves and parses thin film sample metadata from Crucible database,
-filtering TF-prefixed samples and creating ThinFilm objects for the
+filtering TF-prefixed samples and creating Sample objects for the
 10k perovskites project dataset management.
 
 Created on Tue Jan 20 16:57:19 2026
@@ -12,7 +12,7 @@ Created on Tue Jan 20 16:57:19 2026
 """
 
 # internal stuff
-from tksamples.thinfilm import ThinFilm
+from tksamples.sample import Sample
 from tksamples.crucible.client import setup_crux_client
 
 #%%
@@ -31,7 +31,7 @@ def get_thin_films_from_crucible():
     
     thin_films = []
     for dataset in tf_datasets:
-        tf = ThinFilm(**dataset)
+        tf = Sample(**dataset)
         thin_films.append(tf)
 
     return thin_films

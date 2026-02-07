@@ -60,20 +60,20 @@ create_config_file('your_api_key_here', cache_dir='/path/to/your/cache')
 
 ```python
 # Load relevant modules
-from tksamples import ThinFilms  # Import the ThinFilms class from the tksamples package
+from tksamples import Samples  # Import the Samples class from the tksamples package
 
-# Initialize the ThinFilms object
+# Initialize the Samples object
 # Use cache to avoid redundant downloads and set overwrite_cache to False
-tfilms = ThinFilms(from_crucible=True, use_cache=True, overwrite_cache=False)
+samples = Samples(from_crucible=True, use_cache=True, overwrite_cache=False)
 
 # Retrieve well images for the thin films
-tfilms.get_well_images()
+samples.get_well_images()
 
 # Retrieve UV-Vis data for the thin films
-tfilms.get_uvvis_data()
+samples.get_uvvis_data()
 
 # Access individual samples with their measurements
-sample = tfilms[0]
+sample = samples[0]
 print(f"Sample {sample.sample_name} has {len(sample.measurements)} measurements")
 ```
 
