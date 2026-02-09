@@ -46,7 +46,7 @@ tf = thin_films[0]
 print(f"Sample: {tf.sample_name}")
 
 # Or by name/ID from the project
-tf = proj["TF0001"]  # by name
+tf = proj["TF000001"]  # by name
 # tf = proj[sample_unique_id]  # or by ID
 
 #%% Explore genealogy - direct relationships
@@ -74,7 +74,7 @@ siblings = proj.get_siblings(tf)
 print(f"Siblings: {len(siblings)}")
 
 # Find common ancestors between two samples
-tf2 = proj["TF0002"]
+tf2 = proj["TF000002"]
 common = proj.get_common_ancestors(tf, tf2)
 print(f"Common ancestors: {len(common)}")
 

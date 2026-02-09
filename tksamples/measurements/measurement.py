@@ -29,17 +29,25 @@ class Measurement(CruxObj):
         #make sure it's a copy
         dataset = dataset.copy()
         
-        super().__init__(mfid=dataset["unique_id"],
-                         creation_time=dataset["creation_time"],
-                         dtype="dataset",
+        # store info
+        self._dataset = dataset
+        
+        # initialize parent class
+        super().__init__(mfid          = dataset["unique_id"],
+                         project_id    = dataset["project_id"],
+                         creation_time = dataset["creation_time"],
+                         dtype         = "dataset",
                          )
         
+        # store sample information
         self._sample_name  = sample_name
         self._sample_mfid  = sample_mfid
         self.measurement_type = measurement_type
         
+        # easy way to access metadata
         self.scientific_metadata = dataset.get("scientific_metadata")["scientific_metadata"]
         
+        # initialize sample assignment variables
         self._is_assigned = False
     
         return

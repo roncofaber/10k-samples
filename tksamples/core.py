@@ -31,16 +31,27 @@ class CruxObj(object):
     # Class variable for the client
     _client = setup_crux_client()
     
-    __slots__ = ["_dtype", "_unique_id", "_creation_time"]
+    __slots__ = ["_dtype", "_unique_id", "_creation_time", "_project_id"]
 
     
-    def __init__(self, mfid=None, dtype=None, creation_time=None):
+    def __init__(self, mfid=None, dtype=None, creation_time=None,
+                 project_id=None):
         
         # add data type
         self._dtype     = dtype
         self._unique_id = mfid
         self._creation_time = datetime.fromisoformat(creation_time)
-
+        
+        # FIXME: add project_id to samples in Crucible
+        if project_id is not None:
+            self._project_id = project_id
+        else:
+            self._project_id = "10k_perovskites"
+        
+        # initialize QR code
+        self._qr_code = qrcode.QRCode(border=1)
+        self._qr_code.add_data(self.mfid)
+        
         return
     
     @property
@@ -56,10 +67,8 @@ class CruxObj(object):
         return self._unique_id
     
     @property
-    def _qr_code(self):
-        qr_code = qrcode.QRCode(border=1)
-        qr_code.add_data(self.mfid)
-        return qr_code
+    def project_id(self):
+        return self._project_id
     
     @property
     def print_qr(self):
@@ -67,8 +76,8 @@ class CruxObj(object):
     
     @property
     def link(self):
-        crux_explorer = "https://crucible-graph-explorer-776258882599.us-central1.run.app/10k_perovskites"
-        url = f"{crux_explorer}/{dtype2ext[self._dtype]}/{self.mfid}"
+        crux_explorer = "https://crucible-graph-explorer-776258882599.us-central1.run.app/"
+        url = f"{crux_explorer}/{self.project_id}/{dtype2ext[self._dtype]}/{self.mfid}"
         return url
     
     def open_in_browser(self):
