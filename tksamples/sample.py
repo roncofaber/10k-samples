@@ -25,12 +25,16 @@ class Sample(CruxObj):
     def __init__(self, dataset, measurements=None, **kwargs):
         
         # store dataset information of the sample
-        self._dataset = dataset.copy()
+        dataset = dataset.copy()
         
-        # Pass crucible core infro to parent class
-        mfid = self._dataset["unique_id"]
-        time = self._dataset["date_created"]
-        super().__init__(mfid=mfid, dtype="sample", creation_time=time)
+        self._dataset = dataset
+        
+        # initialize parent class
+        super().__init__(mfid          = dataset["unique_id"],
+                         project_id    = dataset["project_id"],
+                         creation_time = dataset["date_created"],
+                         dtype         = "sample",
+                         )
 
         # Set to track measurement types
         self._measurements = {}

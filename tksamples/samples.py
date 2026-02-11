@@ -49,8 +49,7 @@ class Samples(SampleCollection):
         self._cache_dir = cache_dir if cache_dir is not None else str(get_cache_dir())
         self._overwrite = overwrite_cache
 
-        # set up knowledge of project
-        self._project_id  = project_id
+        # set up knowledge of sample type
         self._sample_type = sample_type
 
         # read samples from crucible
@@ -59,7 +58,7 @@ class Samples(SampleCollection):
                                                       sample_type=sample_type)
 
         # Initialize parent class with samples
-        super().__init__(samples=samples)
+        super().__init__(samples=samples, project_id=project_id)
 
         return
     
@@ -71,7 +70,7 @@ class Samples(SampleCollection):
         dsts_samples = sorted(dsts_samples, key=lambda x: x["sample_name"])
         
         # get a map of all datasets in the project with all the data
-        dataset_map = self._get_project_datasets()
+        dataset_map = self._get_project_datasets(project_id=project_id)
         
         # create a TF obj for each sample dataset
         samples = []
@@ -90,11 +89,11 @@ class Samples(SampleCollection):
     
         return samples
 
-    def _get_project_datasets(self):
-        
+    def _get_project_datasets(self, project_id=None):
+
         # get all project datasets
         all_datasets = self.client.list_datasets(
-            project_id=self._project_id, limit=999999, include_metadata=True)
+            project_id=project_id, limit=999999, include_metadata=True)
 
         return {dst["unique_id"]:dst for dst in all_datasets}
     
@@ -194,5 +193,5 @@ class Samples(SampleCollection):
         """Create a new Samples collection from sliced samples."""
         return Samples(samples=sliced_samples, from_crucible=False,
                        cache_dir=self._cache_dir, use_cache=self._use_cache,
-                       overwrite_cache=self._overwrite, project_id=self._project_id,
+                       overwrite_cache=self._overwrite, project_id=self.project_id,
                        sample_type=self._sample_type)

@@ -10,6 +10,7 @@ Created on Thu Feb  5 13:09:34 2026
 from tksamples import Sample
 from tksamples.collection import SampleCollection
 from tksamples.graph.graph import build_project_graph
+from tksamples.crucible.config import get_cache_dir
 
 # avoid circular import by importing inside method
 # from tksamples import Samples
@@ -25,25 +26,28 @@ import networkx as nx
 
 class CrucibleProject(SampleCollection):
 
-    def __init__(self, project_id):
+    def __init__(self, project_id, cache_dir=None, use_cache=True,
+                 overwrite_cache=False):
 
-        # internal variables
-        self._project_id  = project_id
+        # store cache settings
+        self._cache_dir = cache_dir if cache_dir is not None else str(get_cache_dir())
+        self._use_cache = use_cache
+        self._overwrite_cache = overwrite_cache
 
         # load samples and initialize parent
-        samples = self._load_samples()
-        super().__init__(samples=samples)
+        samples = self._load_samples(project_id)
+        super().__init__(samples=samples, project_id=project_id)
 
         # build project graph
         self._setup_graph()
 
         return
     
-    def _load_samples(self):
+    def _load_samples(self, project_id):
         """Load all samples from the Crucible project."""
         # get all samples and datasets
-        dsts_samples  = self._get_project_samples()
-        dsts_datasets = self._get_project_datasets()
+        dsts_samples  = self._get_project_samples(project_id)
+        dsts_datasets = self._get_project_datasets(project_id)
 
         # create mapping of datasets with metadata
         dataset_map = {dst["unique_id"]:dst for dst in dsts_datasets}
@@ -66,15 +70,15 @@ class CrucibleProject(SampleCollection):
         return samples
 
 
-    def _get_project_samples(self):
+    def _get_project_samples(self, project_id):
         dsts_samples = self.client.list_samples(
-            project_id=self.project_id, sample_type=None, limit=999999)
+            project_id=project_id, sample_type=None, limit=999999)
         dsts_samples = sorted(dsts_samples, key=lambda x: x["sample_name"])
         return dsts_samples
-        
-    def _get_project_datasets(self):
+
+    def _get_project_datasets(self, project_id):
         dsts_datasets = self.client.list_datasets(
-            project_id=self.project_id, limit=999999, include_metadata=True)
+            project_id=project_id, limit=999999, include_metadata=True)
         return dsts_datasets
     
     def _get_project_graph(self):
@@ -117,10 +121,6 @@ class CrucibleProject(SampleCollection):
         self._graph = build_project_graph(self.samples)
                 
         return
-    
-    @property
-    def project_id(self):
-        return self._project_id
 
     @property
     def graph(self):
@@ -169,7 +169,9 @@ class CrucibleProject(SampleCollection):
 
         samples_list = self.get_samples_by_type(sample_type)
         return Samples(samples=samples_list, from_crucible=False,
-                      project_id=self._project_id, sample_type=sample_type)
+                      cache_dir=self._cache_dir, use_cache=self._use_cache,
+                      overwrite_cache=self._overwrite_cache,
+                      project_id=self.project_id, sample_type=sample_type)
 
     @property
     def sample_types(self):
@@ -363,3 +365,7 @@ class CrucibleProject(SampleCollection):
         >>> all_from_solution = project.get_samples_with_ancestor(solution)
         """
         return self.get_descendants(ancestor)
+    
+    def __repr__(self):
+        """Return string representation of the collection."""
+        return f"{self.__class__.__name__}({self.project_id} | {self.nsamples} samples)"

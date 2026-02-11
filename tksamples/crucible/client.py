@@ -17,7 +17,7 @@ import os
 import logging
 
 # internal packages
-from .config import get_crucible_api_key
+from pycrucible.config import get_client
 from tksamples.utils.auxiliary import filter_links
 
 # scicomp
@@ -36,10 +36,16 @@ logger = logging.getLogger(__name__)
 
 # setup the crucible client
 def setup_crux_client():
-    from pycrucible import CrucibleClient
-    api_url = 'https://crucible.lbl.gov/testapi'
-    api_key = get_crucible_api_key()
-    return CrucibleClient(api_url, api_key)
+    """
+    Get a configured CrucibleClient instance.
+
+    Uses pycrucible.config to get API credentials from environment
+    variables or config file.
+
+    Returns:
+        CrucibleClient: Configured client instance
+    """
+    return get_client()
 
 
 def get_data_from_crux(client, dataset_id, extension, output_dir=".", fname=None,

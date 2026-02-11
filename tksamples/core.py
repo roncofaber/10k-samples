@@ -41,12 +41,7 @@ class CruxObj(object):
         self._dtype     = dtype
         self._unique_id = mfid
         self._creation_time = datetime.fromisoformat(creation_time)
-        
-        # FIXME: add project_id to samples in Crucible
-        if project_id is not None:
-            self._project_id = project_id
-        else:
-            self._project_id = "10k_perovskites"
+        self._project_id = project_id
         
         # initialize QR code
         self._qr_code = qrcode.QRCode(border=1)

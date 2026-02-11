@@ -27,7 +27,7 @@ class SampleCollection(CruxObj):
     loading and collection-specific methods.
     """
 
-    def __init__(self, samples=None):
+    def __init__(self, samples=None, project_id=None):
         """
         Initialize the sample collection.
 
@@ -35,9 +35,12 @@ class SampleCollection(CruxObj):
         ----------
         samples : list of Sample, optional
             List of Sample objects to store in the collection
+        project_id : str, optional
+            The project ID for this collection
         """
         # this class really does not have mfid or creation time...
-        super().__init__(mfid="", dtype="main", creation_time="1993-04-01T01:18:00.0000+01:00")
+        super().__init__(mfid="", dtype="main", creation_time="1993-04-01T01:18:00.0000+01:00",
+                         project_id=project_id)
 
         # store samples
         self._samples = samples if samples is not None else []
