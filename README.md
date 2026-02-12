@@ -15,44 +15,65 @@ pip install -e .
 
 ### Setting up Crucible API Access
 
-The package requires a Crucible API key. You can configure it in two ways:
+`tksamples` uses the [pycrucible](https://github.com/MolecularFoundryCrucible/pycrucible) package for Crucible API access. Configuration is managed through `pycrucible`.
 
-1. **Environment variable** (recommended for temporary use):
+**Recommended: Use the interactive setup wizard**
+```bash
+crucible config init
+```
+
+This will guide you through setting up your API key and other settings.
+
+**Alternative configuration methods:**
+
+1. **Environment variable** (temporary use):
 ```bash
 export CRUCIBLE_API_KEY='your_api_key_here'
 ```
 
-2. **Config file** (recommended for persistent configuration):
+2. **Programmatic setup**:
 ```python
-from tksamples.crucible.config import create_config_file
+from pycrucible.config import create_config_file
 create_config_file('your_api_key_here')
 ```
 
-This creates a config file at `~/.config/tksamples/config.ini` on Linux/macOS or `%APPDATA%\tksamples\config.ini` on Windows.
-
-### Cache Directory Configuration
-
-By default, cached data is stored in the platform-specific cache directory (`~/.cache/tksamples/` on Linux, `~/Library/Caches/tksamples/` on macOS, `%LOCALAPPDATA%\tksamples\` on Windows).
-
-You can customize the cache location:
-
-1. **Environment variable**:
-```bash
-export TKSAMPLES_CACHE_DIR='/path/to/your/cache'
-```
-
-2. **Config file**: Add to your `~/.config/tksamples/config.ini`:
+3. **Manual config file**: Create `~/.config/pycrucible/config.ini`:
 ```ini
 [crucible]
 api_key = your_api_key_here
-cache_dir = /path/to/your/cache
+api_url = https://crucible.lbl.gov/testapi
+cache_dir = /path/to/your/cache  # optional
+orcid_id = 0000-0001-2345-6789   # optional
 ```
 
-3. **Programmatically**:
-```python
-from tksamples.crucible.config import create_config_file
-create_config_file('your_api_key_here', cache_dir='/path/to/your/cache')
+**Get your API key:** https://crucible.lbl.gov/testapi/user_apikey
+
+### Managing Configuration with CLI
+
+View and manage your configuration:
+
+```bash
+# Show all settings
+crucible config show
+
+# Get a specific value
+crucible config get api_key
+
+# Set a value
+crucible config set cache_dir ~/.cache/my-cache
+
+# Edit config file directly
+crucible config edit
 ```
+
+### Cache Directory
+
+By default, cached data is stored in `~/.cache/pycrucible/` (Linux/macOS) or `%LOCALAPPDATA%\pycrucible\` (Windows).
+
+Customize cache location:
+- Environment variable: `export PYCRUCIBLE_CACHE_DIR='/path/to/cache'`
+- Config file: Set `cache_dir` as shown above
+- CLI: `crucible config set cache_dir /path/to/cache`
 
 ## Quick Start
 
@@ -79,7 +100,10 @@ print(f"Sample {sample.sample_name} has {len(sample.measurements)} measurements"
 
 ## Requirements
 
-See `pyproject.toml` for full dependency list. Python ≥ 3.8 required.
+- Python ≥ 3.8
+- [pycrucible](https://github.com/MolecularFoundryCrucible/pycrucible) - Crucible API client and configuration management
+
+See `pyproject.toml` for full dependency list.
 
 ## Examples
 

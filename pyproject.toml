@@ -55,7 +55,6 @@ packages = [
     "tksamples.measurements",
     "tksamples.utils",
     "tksamples.crucible",
-    "tksamples.genealogy",
     "tksamples.examples"
 ]
 
