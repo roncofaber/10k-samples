@@ -40,7 +40,10 @@ class CruxObj(object):
         # add data type
         self._dtype     = dtype
         self._unique_id = mfid
-        self._creation_time = datetime.fromisoformat(creation_time)
+        if creation_time is not None:
+            self._creation_time = datetime.fromisoformat(creation_time)
+        else:
+            self._creation_time = None
         self._project_id = project_id
         
         # initialize QR code
@@ -71,7 +74,8 @@ class CruxObj(object):
     
     @property
     def link(self):
-        crux_explorer = "https://crucible-graph-explorer-776258882599.us-central1.run.app/"
+        from crucible.config import config
+        crux_explorer = config.graph_explorer_url.rstrip('/')
         url = f"{crux_explorer}/{self.project_id}/{dtype2ext[self._dtype]}/{self.mfid}"
         return url
     

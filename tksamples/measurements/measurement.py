@@ -33,6 +33,13 @@ class Measurement(CruxObj):
         self._dataset = dataset
         
         # initialize parent class
+        
+        if "project_id" not in dataset: #FIXME
+            dataset["project_id"] = "10k_perovskites"
+            
+        if "creation_time" not in dataset: #FIXME
+            dataset["creation_time"] = "1993-04-01T01:18:00.0000+01:00"
+        
         super().__init__(mfid          = dataset["unique_id"],
                          project_id    = dataset["project_id"],
                          creation_time = dataset["creation_time"],
@@ -45,7 +52,10 @@ class Measurement(CruxObj):
         self.measurement_type = measurement_type
         
         # easy way to access metadata
-        self.scientific_metadata = dataset.get("scientific_metadata")["scientific_metadata"]
+        try:
+            self.scientific_metadata = dataset.get("scientific_metadata")["scientific_metadata"]
+        except:
+            self.scientific_metadata = None
         
         # initialize sample assignment variables
         self._is_assigned = False
@@ -55,11 +65,9 @@ class Measurement(CruxObj):
     def _assign_to_sample(self, sample):
 
         if self.sample_mfid != sample.mfid:
-            logger.warning(f"Measurement MFID mismatch - expected {sample.mfid}")
-            logger.debug(f"Measurement MFID: {self.sample_mfid}, Sample MFID: {sample.mfid}")
+            logger.warning(f"{sample.sample_name} : measurement MFID mismatch!")
         if self._is_assigned:
             logger.warning(f"Measurement is already assigned to sample {self.sample.sample_name}")
-            logger.debug(f"Attempting to reassign to {sample.sample_name}")
 
         self.sample = sample
         self._is_assigned = True

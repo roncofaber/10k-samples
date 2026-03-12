@@ -34,7 +34,8 @@ class CrucibleProject(SampleCollection):
         self._use_cache = use_cache
         self._overwrite_cache = overwrite_cache
 
-        # load samples and initialize parent
+        # load datasets and samples and initialize parent
+        self._load_datasets(project_id)
         samples = self._load_samples(project_id)
         super().__init__(samples=samples, project_id=project_id)
 
@@ -47,28 +48,34 @@ class CrucibleProject(SampleCollection):
         """Load all samples from the Crucible project."""
         # get all samples and datasets
         dsts_samples  = self._get_project_samples(project_id)
-        dsts_datasets = self._get_project_datasets(project_id)
-
-        # create mapping of datasets with metadata
-        dataset_map = {dst["unique_id"]:dst for dst in dsts_datasets}
 
         # create one sample obj for each sample dataset
         samples = []
         for dst_sample in dsts_samples:
 
             for dst in dst_sample.get("datasets", []):
-                dst.update(dataset_map[dst["unique_id"]])
+                try:
+                    dst.update(self._datasets_by_id[dst["unique_id"]])
+                except:
+                    print(dst)
 
             try:
                 tf = Sample(dst_sample)
                 samples.append(tf)
             except Exception as e:
                 logger.error(f"Failed to create Sample from dataset: {e}")
-                logger.debug(f"Dataset details:\n\t- name: {dst_sample.get('dataset_name', 'unknown')}"\
-                             "\n\t- id: {dataset.get('unique_id', 'unknown')}")
+                logger.error(f"Dataset details:\n\t{dst_sample}")
 
         return samples
 
+    def _load_datasets(self, project_id):
+        
+        self._datasets = self._get_project_datasets(project_id)
+
+        # create mapping of datasets with metadata
+        self._datasets_by_id = {dst["unique_id"]:dst for dst in self._datasets}
+        
+        return
 
     def _get_project_samples(self, project_id):
         dsts_samples = self.client.list_samples(
@@ -122,6 +129,10 @@ class CrucibleProject(SampleCollection):
                 
         return
 
+    @property
+    def datasets(self):
+        return self._datasets
+    
     @property
     def graph(self):
         return self._graph

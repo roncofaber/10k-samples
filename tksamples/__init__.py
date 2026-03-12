@@ -8,7 +8,7 @@ sample characterization workflows.
 
 import logging
 
-# Configuration and utilities
+# Configuration and utilities (from nano-crucible)
 from .crucible import get_crucible_api_key, create_config_file, get_config_file_path
 
 # Core classes
@@ -58,7 +58,7 @@ def setup_logging(level=logging.INFO, format_string=None):
     >>> tksamples.setup_logging(level=logging.WARNING)  # Only warnings and errors
     """
     if format_string is None:
-        format_string = '%(name)s - %(levelname)s - %(message)s'
+        format_string = '%(levelname)s | %(message)s'
 
     # Configure the root logger for the tksamples package
     logger = logging.getLogger('tksamples')

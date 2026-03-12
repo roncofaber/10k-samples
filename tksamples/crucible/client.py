@@ -17,7 +17,7 @@ import os
 import logging
 
 # internal packages
-from pycrucible.config import get_client
+from crucible.config import get_client
 from tksamples.utils.auxiliary import filter_links
 
 # scicomp
@@ -39,7 +39,7 @@ def setup_crux_client():
     """
     Get a configured CrucibleClient instance.
 
-    Uses pycrucible.config to get API credentials from environment
+    Uses nano-crucible.config to get API credentials from environment
     variables or config file.
 
     Returns:

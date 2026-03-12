@@ -128,7 +128,7 @@ class Samples(SampleCollection):
         # Collect measurements from all datasets
         measurements = []
         for dataset in tqdm(datasets, desc=description, unit="dts", leave=False):
-            data = converter_func(self.client, dataset, output_dir=self._cache_dir,
+            data = converter_func(self.client, dataset, output_dir=self._cache_dir + "/datasets",
                                  use_cache=self._use_cache,
                                  overwrite_existing=self._overwrite)
             if data is not None:

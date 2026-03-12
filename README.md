@@ -15,7 +15,7 @@ pip install -e .
 
 ### Setting up Crucible API Access
 
-`tksamples` uses the [pycrucible](https://github.com/MolecularFoundryCrucible/pycrucible) package for Crucible API access. Configuration is managed through `pycrucible`.
+`tksamples` uses the [nano-crucible](https://github.com/MolecularFoundryCrucible/nano-crucible) package for Crucible API access. Configuration is managed through `nano-crucible`.
 
 **Recommended: Use the interactive setup wizard**
 ```bash
@@ -33,11 +33,11 @@ export CRUCIBLE_API_KEY='your_api_key_here'
 
 2. **Programmatic setup**:
 ```python
-from pycrucible.config import create_config_file
+from crucible.config import create_config_file
 create_config_file('your_api_key_here')
 ```
 
-3. **Manual config file**: Create `~/.config/pycrucible/config.ini`:
+3. **Manual config file**: Create `~/.config/nano-crucible/config.ini`:
 ```ini
 [crucible]
 api_key = your_api_key_here
@@ -68,7 +68,7 @@ crucible config edit
 
 ### Cache Directory
 
-By default, cached data is stored in `~/.cache/pycrucible/` (Linux/macOS) or `%LOCALAPPDATA%\pycrucible\` (Windows).
+By default, cached data is stored in `~/.cache/nano-crucible/` (Linux/macOS) or `%LOCALAPPDATA%\nano-crucible\` (Windows).
 
 Customize cache location:
 - Environment variable: `export PYCRUCIBLE_CACHE_DIR='/path/to/cache'`
@@ -77,31 +77,77 @@ Customize cache location:
 
 ## Quick Start
 
-### Working with Crucible Database
+### Working with Crucible Projects
+
+The recommended way to work with samples is through the `CrucibleProject` class, which loads all samples and relationships from a Crucible project.
 
 ```python
-# Load relevant modules
-from tksamples import Samples  # Import the Samples class from the tksamples package
+from tksamples.project import CrucibleProject
 
-# Initialize the Samples object
-# Use cache to avoid redundant downloads and set overwrite_cache to False
-samples = Samples(from_crucible=True, use_cache=True, overwrite_cache=False)
+# Load a project from Crucible
+project_id = "10k_perovskites"
+proj = CrucibleProject(project_id)
 
-# Retrieve well images for the thin films
-samples.get_well_images()
+# Get a collection of samples by type
+tfilms = proj.get_samples_collection("thin film")
+psolus = proj.get_samples_collection("PS")  # Precursor solutions
 
-# Retrieve UV-Vis data for the thin films
-samples.get_uvvis_data()
+# Retrieve measurement data (uses cache by default)
+tfilms.get_uvvis_data()    # Load UV-Vis spectroscopy data
+tfilms.get_well_images()   # Load sample well images
 
-# Access individual samples with their measurements
-sample = samples[0]
+# Access individual samples
+sample = tfilms[0]
 print(f"Sample {sample.sample_name} has {len(sample.measurements)} measurements")
+
+# Access samples by name or ID
+sample_by_name = tfilms["sample_name"]
+sample_by_id = tfilms["unique_id_here"]
+```
+
+### Direct Samples Loading (Alternative)
+
+You can also load samples directly without a project:
+
+```python
+from tksamples import Samples
+
+# Load all samples of a specific type
+tfilms = Samples(
+    project_id="10k_perovskites",
+    sample_type="thin film",
+    from_crucible=True,
+    use_cache=True,
+    overwrite_cache=False
+)
+
+# Retrieve measurement data
+tfilms.get_uvvis_data()
+tfilms.get_well_images()
+```
+
+### Configuring Cache Behavior
+
+Control caching when loading projects or samples:
+
+```python
+# Use custom cache directory and disable caching
+proj = CrucibleProject(
+    project_id="10k_perovskites",
+    use_cache=False,               # Don't use cached data
+    overwrite_cache=True,          # Overwrite existing cache
+    cache_dir="/path/to/cache"     # Custom cache location
+)
+
+# Same options work for Samples
+tfilms = proj.get_samples_collection("thin film")
+# Cache settings are inherited from project
 ```
 
 ## Requirements
 
 - Python ≥ 3.8
-- [pycrucible](https://github.com/MolecularFoundryCrucible/pycrucible) - Crucible API client and configuration management
+- [nano-crucible](https://github.com/MolecularFoundryCrucible/nano-crucible) - Crucible API client and configuration management
 
 See `pyproject.toml` for full dependency list.
 

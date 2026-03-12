@@ -11,7 +11,6 @@ from .config import (
     config,
     get_crucible_api_key,
     get_cache_dir,
-    get_orcid_id,
     create_config_file,
     get_config_file_path,
 )
@@ -30,7 +29,6 @@ __all__ = [
     "config",
     "get_crucible_api_key",
     "get_cache_dir",
-    "get_orcid_id",
     "create_config_file",
     "get_config_file_path",
     "setup_crux_client",
